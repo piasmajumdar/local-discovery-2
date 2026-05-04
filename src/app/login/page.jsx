@@ -14,7 +14,7 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="login-container w-full max-w-4xl flex flex-col md:flex-row bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="login-w-11/12 sm:w-10/12 w-full max-w-4xl flex flex-col md:flex-row bg-white rounded-2xl shadow-2xl overflow-hidden">
                 <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
                     <div className="mb-8 text-center md:text-left">
                         <Link href="/" className="inline-block mb-6 text-2xl font-bold">

@@ -8,7 +8,7 @@ export default function Header() {
 
     return (
         <header className="pt-5 bg-gray-700 text-white border-b border-[#b8a9a9] px-2">
-            <nav className="container mx-auto flex justify-between">
+            <nav className="w-11/12 sm:w-10/12 mx-auto flex justify-between">
                 <div>
                     <div className="mb-5">
                         <Link href="/">

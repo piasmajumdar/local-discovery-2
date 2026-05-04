@@ -14,7 +14,7 @@ export default function SignupPage() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if(formData.password !== formData.confirmPassword) {
+        if (formData.password !== formData.confirmPassword) {
             alert("Passwords do not match!");
             return;
         }
@@ -23,7 +23,7 @@ export default function SignupPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 py-12">
-            <div className="signup-container w-full max-w-4xl flex flex-col md:flex-row bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="signup-w-11/12 sm:w-10/12 w-full max-w-4xl flex flex-col md:flex-row bg-white rounded-2xl shadow-2xl overflow-hidden">
                 <div className="w-full md:w-1/2 bg-gradient-to-br from-[#ff8938] to-[#ff0000] p-12 text-white flex flex-col justify-center items-center text-center hidden md:flex">
                     <div className="bg-white/20 p-6 rounded-full mb-8 backdrop-blur-sm">
                         <i className="fa-solid fa-users text-6xl"></i>
@@ -48,7 +48,7 @@ export default function SignupPage() {
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i className="fa-regular fa-user text-gray-400"></i>
                                 </div>
-                                <input type="text" required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff8938] focus:border-[#ff8938] outline-none transition-all" placeholder="Enter your full name" />
+                                <input type="text" required value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff8938] focus:border-[#ff8938] outline-none transition-all" placeholder="Enter your full name" />
                             </div>
                         </div>
 
@@ -58,7 +58,7 @@ export default function SignupPage() {
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i className="fa-regular fa-envelope text-gray-400"></i>
                                 </div>
-                                <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff8938] focus:border-[#ff8938] outline-none transition-all" placeholder="Enter your email" />
+                                <input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff8938] focus:border-[#ff8938] outline-none transition-all" placeholder="Enter your email" />
                             </div>
                         </div>
 
@@ -68,7 +68,7 @@ export default function SignupPage() {
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i className="fa-solid fa-lock text-gray-400"></i>
                                 </div>
-                                <input type={showPassword ? "text" : "password"} required value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff8938] focus:border-[#ff8938] outline-none transition-all" placeholder="Create a password" />
+                                <input type={showPassword ? "text" : "password"} required value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff8938] focus:border-[#ff8938] outline-none transition-all" placeholder="Create a password" />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#ff8938]">
                                     <i className={`fa-regular ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                                 </button>
@@ -81,7 +81,7 @@ export default function SignupPage() {
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i className="fa-solid fa-lock text-gray-400"></i>
                                 </div>
-                                <input type={showConfirmPassword ? "text" : "password"} required value={formData.confirmPassword} onChange={e => setFormData({...formData, confirmPassword: e.target.value})} className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff8938] focus:border-[#ff8938] outline-none transition-all" placeholder="Confirm your password" />
+                                <input type={showConfirmPassword ? "text" : "password"} required value={formData.confirmPassword} onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })} className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#ff8938] focus:border-[#ff8938] outline-none transition-all" placeholder="Confirm your password" />
                                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#ff8938]">
                                     <i className={`fa-regular ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                                 </button>
