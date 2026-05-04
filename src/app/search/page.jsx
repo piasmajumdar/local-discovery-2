@@ -22,6 +22,27 @@ function calcDist(lat, lng) {
   return +(12742 * Math.asin(Math.sqrt(a))).toFixed(1);
 }
 
+function isShopOpen(hours) {
+  if (!hours || hours === "24 Hours" || hours.includes("24x7")) return true;
+  try {
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const parts = hours.split(/[–-]/);
+    if (parts.length !== 2) return true;
+    const parseTime = (t) => {
+      const match = t.trim().match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!match) return null;
+      let h = parseInt(match[1]), m = parseInt(match[2]), ampm = match[3].toUpperCase();
+      if (ampm === 'PM' && h < 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+      return h * 60 + m;
+    };
+    const start = parseTime(parts[0]), end = parseTime(parts[1]);
+    if (start === null || end === null) return true;
+    return end < start ? (currentTime >= start || currentTime <= end) : (currentTime >= start && currentTime <= end);
+  } catch (e) { return true; }
+}
+
 function sIcon(shop, isActive) {
   if (typeof window === 'undefined' || !window.L) return null;
   const tc = shop.trust >= 90 ? '#16a34a' : shop.trust >= 75 ? '#ca8a04' : shop.trust >= 50 ? '#ea580c' : '#dc2626';
@@ -151,11 +172,12 @@ function SearchContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    // initialize distance and dynamic rating strictly from data
+    // initialize distance, dynamic rating and open status strictly from data
     const s = SHOPS.map(shop => {
       const distance = calcDist(shop.lat, shop.lng);
       const rating = calcRating(shop.reviews);
-      return { ...shop, distance, rating };
+      const isOpen = isShopOpen(shop.hours);
+      return { ...shop, distance, rating, isOpen };
     });
     setShops(s);
   }, []);
