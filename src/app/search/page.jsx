@@ -2,7 +2,9 @@
 import React, { useState, useEffect, useRef, useMemo, memo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { SHOPS } from '@/data/shops';
+import { getNearbyShops } from '@/lib/api';
+import { ShopCardSkeleton } from '@/components/Skeleton';
+// import { SHOPS } from '@/data/shops'; // Removed for MongoDB migration
 
 // Helper functions from search.js
 const BASE_LAT = 16.492241, BASE_LNG = 80.500429;
@@ -142,6 +144,7 @@ ShopCard.displayName = 'ShopCard';
 
 function SearchContent() {
   const [shops, setShops] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filtered, setFiltered] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('');
@@ -172,14 +175,23 @@ function SearchContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    // initialize distance, dynamic rating and open status strictly from data
-    const s = SHOPS.map(shop => {
-      const distance = calcDist(shop.lat, shop.lng);
-      const rating = calcRating(shop.reviews);
-      const isOpen = isShopOpen(shop.hours);
-      return { ...shop, distance, rating, isOpen };
-    });
-    setShops(s);
+    async function fetchShops() {
+      try {
+        const data = await getNearbyShops(BASE_LAT, BASE_LNG);
+        const s = data.map(shop => {
+          const distance = calcDist(shop.lat, shop.lng);
+          const rating = calcRating(shop.reviews);
+          const isOpen = isShopOpen(shop.hours);
+          return { ...shop, distance, rating, isOpen };
+        });
+        setShops(s);
+      } catch (e) {
+        console.error("Failed to fetch shops:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchShops();
   }, []);
 
   useEffect(() => {
@@ -574,6 +586,27 @@ function SearchContent() {
     );
   };
 
+  const [user, setUser] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("User parse error", e);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    window.location.href = '/login?logout=success';
+  };
+
   useEffect(() => {
     let timeoutId;
     if (isDetailOpen && detailShop && typeof window !== 'undefined' && window.L) {
@@ -610,9 +643,43 @@ function SearchContent() {
             <input type="search" placeholder="Search for shops, services, or essentials..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             <button className="hdr-search-btn"><i className="fa-solid fa-magnifying-glass-location"></i></button>
           </div>
-          <div className="hdr-right">
-            <Link href="/" className="btn-list"><i className="fa-solid fa-shop"></i> List your shop</Link>
-            <Link href="/login" className="btn-login">Login</Link>
+          <div className="hdr-right" style={{display:'flex', alignItems:'center', gap:'15px'}}>
+            <Link href="/list-your-shop" className="btn-list"><i className="fa-solid fa-shop"></i> List your shop</Link>
+            
+            {user ? (
+              <div className="relative" style={{position:'relative'}}>
+                <button 
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  style={{display:'flex', alignItems:'center', gap:'8px', background:'var(--surface2)', border:'1.5px solid var(--border2)', padding:'4px 8px', borderRadius:'30px', cursor:'pointer'}}
+                >
+                  <div style={{width:'32px', height:'32px', borderRadius:'50%', background:'var(--grad)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, overflow:'hidden'}}>
+                    {user.photo ? <img src={user.photo} style={{width:'100%', height:'100%', objectFit:'cover'}} alt=""/> : user.fullName.charAt(0).toUpperCase()}
+                  </div>
+                  <i className={`fa-solid fa-chevron-down`} style={{fontSize:'10px', color:'var(--muted)', transition:'transform 0.3s', transform: isMenuOpen ? 'rotate(180deg)' : 'none'}}></i>
+                </button>
+
+                {isMenuOpen && (
+                  <div style={{position:'absolute', right:0, top:'100%', marginTop:'10px', width:'200px', background:'var(--surface)', border:'1.5px solid var(--border2)', borderRadius:'12px', boxShadow:'0 10px 25px rgba(0,0,0,0.1)', padding:'8px 0', zIndex:2000}}>
+                    <div style={{padding:'8px 16px', borderBottom:'1px solid var(--border2)', marginBottom:'5px'}}>
+                      <div style={{fontSize:'11px', color:'var(--muted)'}}>Signed in as</div>
+                      <div style={{fontSize:'13px', fontWeight:700, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{user.fullName}</div>
+                    </div>
+                    <Link href="/dashboard" style={{display:'flex', alignItems:'center', gap:'10px', padding:'10px 16px', color:'var(--text)', fontSize:'13px', textDecoration:'none'}} className="hover:bg-gray-100">
+                      <i className="fa-solid fa-gauge-high" style={{color:'var(--muted)'}}></i> Dashboard
+                    </Link>
+                    <div 
+                      onClick={handleLogout}
+                      style={{display:'flex', alignItems:'center', gap:'10px', padding:'10px 16px', color:'#dc2626', fontSize:'13px', cursor:'pointer'}}
+                      className="hover:bg-red-50"
+                    >
+                      <i className="fa-solid fa-right-from-bracket"></i> Log Out
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link href="/login" className="btn-login">Login</Link>
+            )}
           </div>
         </nav>
       </header>
@@ -640,15 +707,25 @@ function SearchContent() {
             </select>
           </div>
           <div className="shop-list">
-            {filtered.map(shop => (
-              <ShopCard 
-                key={shop.id} 
-                shop={shop} 
-                isActive={activeId === shop.id} 
-                onClick={() => openDetail(shop.id)} 
-              />
-            ))}
-            {!filtered.length && <div className="no-results"><i className="fa-solid fa-store-slash"></i><p>No shops found. Try adjusting your filters.</p></div>}
+            {loading ? (
+              <div className="flex flex-col gap-2 p-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <ShopCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <>
+                {filtered.map(shop => (
+                  <ShopCard 
+                    key={shop.id} 
+                    shop={shop} 
+                    isActive={activeId === shop.id} 
+                    onClick={() => openDetail(shop.id)} 
+                  />
+                ))}
+                {!filtered.length && <div className="no-results"><i className="fa-solid fa-store-slash"></i><p>No shops found. Try adjusting your filters.</p></div>}
+              </>
+            )}
           </div>
         </div>
         <div className="right-panel">
