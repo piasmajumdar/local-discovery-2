@@ -335,13 +335,13 @@ function SearchContent() {
     <div className="fixed-layout">
       <header>
         <nav className="header-nav">
-          <Link href="/" className="text-2xl sm:text-3xl flex flex-col sm:flex-row font-bold no-underline">
+          <Link href="/" className="text-2xl sm:text-3xl flex flex-col sm:flex-row font-bold no-underline flex-shrink-0">
             <span className="text-[red]">Local </span>
             <span className="text-white ml-0 sm:ml-1">Discovery</span>
           </Link>
 
           {/* Desktop Search Bar */}
-          <div className="hidden md:flex">
+          <div className="hidden md:flex flex-1 justify-center px-4 max-w-[500px]">
             <div className="hdr-search">
               <input
                 type="search"
@@ -353,7 +353,7 @@ function SearchContent() {
             </div>
           </div>
 
-          <div className="hdr-right" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div className="hdr-right flex-shrink-0" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <Link href="/list-your-shop" className="btn-list flex"><i className="fa-solid fa-shop"></i> List a shop</Link>
 
             {user ? (
