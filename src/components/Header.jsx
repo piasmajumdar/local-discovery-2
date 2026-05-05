@@ -37,8 +37,11 @@ export default function Header() {
                 </div>
                 <div>
                     <ul className="flex items-center gap-6">
-                        <li className="hover:text-[#ff8938] transition-colors cursor-pointer text-[18px] hidden md:block">
-                            <Link href="/list-your-shop"><i className="fa-solid fa-shop mr-2"></i>List a shop</Link>
+                        <li className="hover:text-[#ff8938] transition-colors cursor-pointer text-[18px]">
+                            <Link href="/list-your-shop">
+                                <i className="fa-solid fa-shop md:mr-2"></i>
+                                <span className="hidden md:inline">List a shop</span>
+                            </Link>
                         </li>
 
                         {user ? (

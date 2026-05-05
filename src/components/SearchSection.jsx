@@ -192,10 +192,9 @@ export default function SearchSection() {
 
                     {/* Search Input Area */}
                     <div className="relative flex-1 w-full group">
-                        <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#ff8938] transition-colors"></i>
                         <input
                             type="search"
-                            className="w-full pl-12 pr-4 py-3.5 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 font-semibold"
+                            className="w-full pl-2 pr-2 py-2 md:py-3 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 font-semibold text-sm md:text-base"
                             placeholder="Search for shops, services, or essentials..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}

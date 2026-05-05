@@ -354,7 +354,10 @@ function SearchContent() {
           </div>
 
           <div className="hdr-right flex-shrink-0" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <Link href="/list-your-shop" className="btn-list flex"><i className="fa-solid fa-shop"></i> List a shop</Link>
+            <Link href="/list-your-shop" className="btn-list flex items-center">
+              <i className="fa-solid fa-shop"></i>
+              <span className="hidden md:inline ml-2">List a shop</span>
+            </Link>
 
             {user ? (
               <div className="relative" style={{ position: 'relative' }}>

@@ -1365,7 +1365,6 @@ header {
         flex-wrap: wrap;
     }
 
-    .btn-list,
     .btn-login {
         display: none;
     }
