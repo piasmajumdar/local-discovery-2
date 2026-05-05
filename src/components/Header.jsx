@@ -30,7 +30,9 @@ export default function Header() {
             <nav className="w-11/12 sm:w-10/12 mx-auto flex justify-between items-center pb-5">
                 <div>
                     <Link href="/">
-                        <h4 className="text-3xl font-bold"><span className="text-[red]">Local</span> Discovery</h4>
+                        <h4 className="text-md sm:text-2xl flex flex-col sm:flex-row font-bold">
+                            <span className="text-[red]">Local </span>
+                            <span>Discovery</span></h4>
                     </Link>
                 </div>
                 <div>
@@ -38,10 +40,10 @@ export default function Header() {
                         <li className="hover:text-[#ff8938] transition-colors cursor-pointer text-[18px] hidden md:block">
                             <Link href="/list-your-shop"><i className="fa-solid fa-shop mr-2"></i>List your shop</Link>
                         </li>
-                        
+
                         {user ? (
                             <div className="relative">
-                                <button 
+                                <button
                                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                                     className="flex items-center gap-2 bg-gray-600 hover:bg-gray-500 p-1 pr-3 rounded-full transition-all border border-gray-500"
                                 >
@@ -65,7 +67,7 @@ export default function Header() {
                                         <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors">
                                             <i className="fa-solid fa-gauge-high text-gray-400"></i> Dashboard
                                         </Link>
-                                        <button 
+                                        <button
                                             onClick={handleLogout}
                                             className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors text-left"
                                         >
