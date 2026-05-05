@@ -12,9 +12,10 @@ const MapComponent = ({
     handleMyLocation,
     containerId = "map",
     isVisible = true,
-    isLocating = false
+    isLocating = false,
+    externalRef = null
 }) => {
-    const mapRef = useRef(null);
+    const [map, setMap] = useState(null);
     const markersRef = useRef({});
     const centerMarkerRef = useRef(null);
     
@@ -25,20 +26,26 @@ const MapComponent = ({
 
     const handleLocSearch = async (val) => {
         setLocSearch(val);
-        if (val.length < 3) { setLocSuggestions([]); return; }
+        if (val.length < 3) { 
+            setLocSuggestions([]); 
+            return; 
+        }
+        
         setIsLocSearching(true);
         try {
             const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&limit=5`);
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
             const data = await res.json();
             setLocSuggestions(data);
-        } catch (e) { console.error(e); }
-        finally { setIsLocSearching(false); }
+        } catch (e) { 
+            console.error("Location search error:", e); 
+        } finally { 
+            setIsLocSearching(false); 
+        }
     };
 
-    // Helper for Marker Icon (Trust-Aware)
     const getShopIcon = (shop, isActive) => {
         if (typeof window === 'undefined' || !window.L) return null;
-        // trust-based border color
         const tc = shop.trust >= 90 ? '#16a34a' : shop.trust >= 75 ? '#ca8a04' : shop.trust >= 50 ? '#ea580c' : '#dc2626';
         const sz = isActive ? 44 : 36;
         const bg = isActive ? '#e02020' : '#fff';
@@ -54,51 +61,62 @@ const MapComponent = ({
         });
     };
 
+    const initializingRef = useRef(false);
+
     // Map Initialization
     useEffect(() => {
-        if (typeof window !== 'undefined' && window.L && !mapRef.current) {
-            mapRef.current = window.L.map(containerId, { zoomControl: false, attributionControl: false }).setView([baseLat, baseLng], 14);
-            window.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(mapRef.current);
+        if (typeof window !== 'undefined' && window.L && !map && !initializingRef.current) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            // If there's an existing internal leaflet id, it means a previous instance wasn't cleaned up
+            if (container._leaflet_id) {
+                container._leaflet_id = null;
+            }
+
+            initializingRef.current = true;
+            try {
+                const m = window.L.map(containerId, { zoomControl: false, attributionControl: false }).setView([baseLat, baseLng], 14);
+                window.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(m);
+                setMap(m);
+                if (externalRef) externalRef.current = m;
+            } catch (err) {
+                console.error("Map init error:", err);
+                initializingRef.current = false;
+            }
         }
 
         return () => {
-            if (mapRef.current) {
-                mapRef.current.remove();
-                mapRef.current = null;
+            if (map) {
+                map.remove();
+                setMap(null);
+                if (externalRef) externalRef.current = null;
+                centerMarkerRef.current = null;
+                markersRef.current = {};
+                initializingRef.current = false;
             }
         };
-    }, [containerId]);
+    }, [containerId, externalRef]);
 
-    // Handle visibility changes (Modal Open)
     useEffect(() => {
-        if (mapRef.current && isVisible) {
-            setTimeout(() => {
-                mapRef.current.invalidateSize();
-            }, 300);
+        if (map && isVisible) {
+            setTimeout(() => { map.invalidateSize(); }, 300);
         }
-    }, [isVisible]);
+    }, [map, isVisible]);
 
-    // Fly to position update
     useEffect(() => {
-        if (mapRef.current) {
-            mapRef.current.flyTo([baseLat, baseLng], 14);
-        }
-    }, [baseLat, baseLng]);
+        if (map) { map.flyTo([baseLat, baseLng], 14); }
+    }, [map, baseLat, baseLng]);
 
     // Center Marker (GPS or Search)
     useEffect(() => {
-        if (!mapRef.current || typeof window === 'undefined' || !window.L) return;
+        if (!map || typeof window === 'undefined' || !window.L) return;
 
         let ic;
         if (isGPS) {
             ic = window.L.divIcon({
                 className: '',
-                html: `
-                    <div class="gps-marker-container">
-                        <div class="gps-marker-pulse"></div>
-                        <div class="gps-marker-dot"></div>
-                    </div>
-                `,
+                html: `<div class="gps-marker-container"><div class="gps-marker-pulse"></div><div class="gps-marker-dot"></div></div>`,
                 iconSize: [24, 24],
                 iconAnchor: [12, 12]
             });
@@ -115,13 +133,13 @@ const MapComponent = ({
             centerMarkerRef.current.setLatLng([baseLat, baseLng]);
             centerMarkerRef.current.setIcon(ic);
         } else {
-            centerMarkerRef.current = window.L.marker([baseLat, baseLng], { icon: ic, zIndexOffset: 2000 }).addTo(mapRef.current).bindPopup(`<div class="popup-name">📍 ${isGPS ? 'Your Location' : 'Search Center'}</div>`);
+            centerMarkerRef.current = window.L.marker([baseLat, baseLng], { icon: ic, zIndexOffset: 2000 }).addTo(map).bindPopup(`<div class="popup-name">📍 ${isGPS ? 'Your Location' : 'Search Center'}</div>`);
         }
-    }, [baseLat, baseLng, isGPS]);
+    }, [map, baseLat, baseLng, isGPS]);
 
     // Shop Markers
     useEffect(() => {
-        if (!mapRef.current || typeof window === 'undefined' || !window.L) return;
+        if (!map || typeof window === 'undefined' || !window.L) return;
 
         const currentMarkerIds = new Set(shops.map(s => s.id));
 
@@ -137,11 +155,8 @@ const MapComponent = ({
         shops.forEach(shop => {
             const isAct = shop.id === activeId;
             if (!markersRef.current[shop.id]) {
-                const m = window.L.marker([shop.lat, shop.lng], { icon: getShopIcon(shop, isAct) }).addTo(mapRef.current)
-                    .bindPopup(`
-                        <div class="popup-name">${shop.name}</div>
-                        <div class="popup-meta">${shop.category} · ${shop.distance}km away</div>
-                    `);
+                const m = window.L.marker([shop.lat, shop.lng], { icon: getShopIcon(shop, isAct) }).addTo(map)
+                    .bindPopup(`<div class="popup-name">${shop.name}</div><div class="popup-meta">${shop.category} · ${shop.distance}km away</div>`);
                 m.on('click', () => onShopClick(shop.id));
                 markersRef.current[shop.id] = m;
             } else {
@@ -149,7 +164,7 @@ const MapComponent = ({
                 markersRef.current[shop.id].setZIndexOffset(isAct ? 1000 : 0);
             }
         });
-    }, [shops, activeId]);
+    }, [map, shops, activeId]);
 
     return (
         <div className="relative w-full h-full">
@@ -200,7 +215,6 @@ const MapComponent = ({
 
             <div id={containerId} style={{ height: '100%', width: '100%' }}></div>
             
-            {/* GPS Loading Overlay */}
             {isLocating && (
                 <div className="absolute inset-0 z-[2000] bg-white/40 backdrop-blur-[2px] flex items-center justify-center animate-in fade-in duration-300">
                     <div className="bg-white px-6 py-4 rounded-2xl shadow-2xl flex flex-col items-center gap-3 border border-gray-100">
@@ -212,12 +226,12 @@ const MapComponent = ({
             
             <div className="map-fab">
                 <div className="map-btn" title="My Location" onClick={handleMyLocation}><i className="fa-solid fa-location-crosshairs"></i></div>
-                <div className="map-btn" title="Zoom In" onClick={() => { if (mapRef.current) mapRef.current.zoomIn() }}><i className="fa-solid fa-plus"></i></div>
-                <div className="map-btn" title="Zoom Out" onClick={() => { if (mapRef.current) mapRef.current.zoomOut() }}><i className="fa-solid fa-minus"></i></div>
+                <div className="map-btn" title="Zoom In" onClick={() => { if (map) map.zoomIn() }}><i className="fa-solid fa-plus"></i></div>
+                <div className="map-btn" title="Zoom Out" onClick={() => { if (map) map.zoomOut() }}><i className="fa-solid fa-minus"></i></div>
             </div>
 
             <style jsx global>{`
-                .gps-marker-container { position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-center; }
+                .gps-marker-container { position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
                 .gps-marker-dot { width: 14px; height: 14px; background: #2563eb; border: 2.5px solid #fff; border-radius: 50%; box-shadow: 0 0 10px rgba(37,99,235,0.5); z-index: 2; }
                 .gps-marker-pulse { position: absolute; width: 100%; height: 100%; background: rgba(37,99,235,0.3); border-radius: 50%; animation: pulse-gps 2s infinite; z-index: 1; }
                 @keyframes pulse-gps { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }

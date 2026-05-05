@@ -29,11 +29,12 @@ export default function SearchSection() {
 
     // Fetch suggestions as user types
     useEffect(() => {
-        const delayDebounce = setTimeout(async () => {
+        const fetchSuggestions = async () => {
             if (locationInput.trim().length > 2) {
                 setIsSearching(true);
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationInput)}&limit=5&addressdetails=1`);
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                     const data = await res.json();
                     setSuggestions(data);
                 } catch (err) {
@@ -44,8 +45,9 @@ export default function SearchSection() {
             } else {
                 setSuggestions([]);
             }
-        }, 500);
-        return () => clearTimeout(delayDebounce);
+        };
+
+        fetchSuggestions();
     }, [locationInput]);
 
     const goToSearch = () => {
