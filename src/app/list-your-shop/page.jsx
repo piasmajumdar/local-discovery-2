@@ -234,14 +234,12 @@ export default function ListYourShop() {
             {/* Notification Toast */}
             {notification && (
                 <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[5000] w-[90%] max-w-md animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className={`flex items-center p-4 rounded-2xl shadow-2xl border ${
-                        notification.type === 'success' 
-                        ? 'bg-green-50 text-green-800 border-green-100' 
+                    <div className={`flex items-center p-4 rounded-2xl shadow-2xl border ${notification.type === 'success'
+                        ? 'bg-green-50 text-green-800 border-green-100'
                         : 'bg-red-50 text-red-800 border-red-100'
-                    }`}>
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-4 ${
-                            notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'
-                        } text-white`}>
+                        }`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-4 ${notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+                            } text-white`}>
                             <i className={`fa-solid ${notification.type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}`}></i>
                         </div>
                         <div className="flex-1">
@@ -257,7 +255,7 @@ export default function ListYourShop() {
             {/* Header Section */}
             <div className="bg-gradient-to-r from-[#ff8938] to-[#ff0000] pt-16 pb-32 px-4 text-center">
                 <div className="max-w-4xl mx-auto">
-                    <h1 className="text-4xl font-black text-white mb-4">List Your Business</h1>
+                    <h1 className="text-4xl font-black text-white mb-4">List Business/ Shops</h1>
                     <p className="text-white/80 text-lg">Connect with your local community and grow your brand.</p>
                 </div>
             </div>
@@ -333,13 +331,13 @@ export default function ListYourShop() {
                                 </div>
                                 <h2 className="text-2xl font-bold text-gray-800">Shop Photos</h2>
                             </div>
-                            
+
                             <div className="space-y-6">
                                 {/* Upload Zone */}
                                 <div className="relative border-2 border-dashed border-gray-200 hover:border-pink-400 rounded-3xl p-10 transition-all group bg-gray-50/50">
-                                    <input 
-                                        type="file" 
-                                        multiple 
+                                    <input
+                                        type="file"
+                                        multiple
                                         accept="image/*"
                                         onChange={(e) => {
                                             const files = Array.from(e.target.files);
@@ -373,8 +371,8 @@ export default function ListYourShop() {
                                 {formData.images.length > 0 && formData.images[0] !== '' && (
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                         {formData.images.map((src, idx) => (
-                                            <div 
-                                                key={idx} 
+                                            <div
+                                                key={idx}
                                                 draggable
                                                 onDragStart={(e) => e.dataTransfer.setData('draggedIdx', idx)}
                                                 onDragOver={(e) => e.preventDefault()}
@@ -395,7 +393,7 @@ export default function ListYourShop() {
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                                                     <i className="fa-solid fa-arrows-up-down-left-right text-white text-xl"></i>
                                                 </div>
-                                                <button 
+                                                <button
                                                     type="button"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
