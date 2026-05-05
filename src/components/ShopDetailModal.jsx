@@ -76,7 +76,15 @@ export default function ShopDetailModal({ isOpen, shop, onClose, onUpdateShop })
         }, 100);
       }
     }
-  }, [isOpen, shop]);
+
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, shop, onClose]);
 
   if (!shop) return null;
 
@@ -351,7 +359,7 @@ export default function ShopDetailModal({ isOpen, shop, onClose, onUpdateShop })
 
   return (
     <>
-      <div className={`detail-overlay z-[3000] ${isOpen ? 'show' : ''}`} onClick={(e) => { if (e.target.classList.contains('detail-overlay')) onClose(); }}>
+      <div className={`detail-overlay z-[5000] ${isOpen ? 'show' : ''}`} onClick={(e) => { if (e.target.classList.contains('detail-overlay')) onClose(); }}>
         <div className="detail-panel">
           <div className="detail-close" onClick={onClose}><i className="fa-solid fa-xmark"></i></div>
           <div className="detail-tabs">
@@ -394,7 +402,7 @@ export default function ShopDetailModal({ isOpen, shop, onClose, onUpdateShop })
         </div>
       </div>
 
-      <div className={`lightbox z-[4000] ${isLightboxOpen ? 'show' : ''}`} onClick={(e) => { if (e.target.classList.contains('lightbox')) setIsLightboxOpen(false); }}>
+      <div className={`lightbox z-[6000] ${isLightboxOpen ? 'show' : ''}`} onClick={(e) => { if (e.target.classList.contains('lightbox')) setIsLightboxOpen(false); }}>
         <button className="lb-close" onClick={() => setIsLightboxOpen(false)}><i className="fa-solid fa-xmark"></i></button>
         <button className="lb-nav lb-prev" onClick={() => lbNav(-1)}><i className="fa-solid fa-chevron-left"></i></button>
         <img src={lightboxImages[lightboxIndex]} alt="" />

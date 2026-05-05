@@ -169,7 +169,7 @@ const MapComponent = ({
     return (
         <div className="relative w-full h-full">
             {/* Floating Location Search */}
-            <div className="absolute top-4 left-4 z-[1000] w-72 sm:w-80">
+            <div className="absolute top-4 left-4 z-[500] w-72 sm:w-80">
                 <div className="relative group">
                     <div className="flex items-center bg-white/95 backdrop-blur-md border border-gray-200 rounded-xl shadow-xl p-1 transition-all focus-within:ring-2 focus-within:ring-[#ff8938] focus-within:bg-white">
                         <div className="pl-3 pr-2 text-gray-400">
@@ -224,7 +224,7 @@ const MapComponent = ({
                 </div>
             )}
             
-            <div className="map-fab">
+            <div className="map-fab z-[400]">
                 <div className="map-btn" title="My Location" onClick={handleMyLocation}><i className="fa-solid fa-location-crosshairs"></i></div>
                 <div className="map-btn" title="Zoom In" onClick={() => { if (map) map.zoomIn() }}><i className="fa-solid fa-plus"></i></div>
                 <div className="map-btn" title="Zoom Out" onClick={() => { if (map) map.zoomOut() }}><i className="fa-solid fa-minus"></i></div>

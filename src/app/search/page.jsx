@@ -243,6 +243,16 @@ function SearchContent() {
     applyFilters();
   }, [searchQuery, activeFilter, sortValue, shops]);
 
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && isMapModalOpen) {
+        setIsMapModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isMapModalOpen]);
+
   const applyFilters = () => {
     let f = [...shops];
     const q = searchQuery.toLowerCase().trim();
