@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { reverseGeocode } from '@/lib/api';
+import { reverseGeocode, getCategories } from '@/lib/api';
 
 export default function ListYourShop() {
     const router = useRouter();
@@ -43,6 +43,12 @@ export default function ListYourShop() {
     const mapRef = useRef(null);
     const markerRef = useRef(null);
     const locateTimeoutRef = useRef(null);
+    const catDropdownRef = useRef(null);
+
+    // Category State
+    const [allCategories, setAllCategories] = useState([]);
+    const [catSearch, setCatSearch] = useState('');
+    const [showCatDropdown, setShowCatDropdown] = useState(false);
 
     const EMOJI_LIST = [
         { char: '🍽️', code: '&#127869;', cat: 'Food' }, { char: '🍴', code: '&#127860;', cat: 'Food' }, { char: '🍕', code: '&#127829;', cat: 'Food' }, { char: '☕', code: '&#9749;', cat: 'Food' },
@@ -102,16 +108,43 @@ export default function ListYourShop() {
         }
     }, [router]);
 
-    // Keyboard Support (ESC to close modal)
     useEffect(() => {
         const handleEsc = (e) => {
-            if (e.key === 'Escape') setShowMapModal(false);
+            if (e.key === 'Escape') {
+                setShowMapModal(false);
+                setShowCatDropdown(false);
+            }
         };
-        if (showMapModal) {
-            window.addEventListener('keydown', handleEsc);
-        }
-        return () => window.removeEventListener('keydown', handleEsc);
-    }, [showMapModal]);
+        const handleClickOutside = (e) => {
+            if (catDropdownRef.current && !catDropdownRef.current.contains(e.target)) {
+                setShowCatDropdown(false);
+            }
+        };
+
+        window.addEventListener('keydown', handleEsc);
+        window.addEventListener('click', handleClickOutside);
+        
+        return () => {
+            window.removeEventListener('keydown', handleEsc);
+            window.removeEventListener('click', handleClickOutside);
+        };
+    }, []);
+
+    // Load Categories
+    useEffect(() => {
+        const loadCats = async () => {
+            const sections = await getCategories();
+            // Data is nested: [{ section: "...", items: [{ name: "..." }] }]
+            // We flatten it to get all individual categories
+            const flattened = (sections || []).flatMap(sec => sec.items || []);
+            setAllCategories(flattened);
+        };
+        loadCats();
+    }, []);
+
+    const filteredCategories = (allCategories || []).filter(cat => 
+        cat && cat.name && typeof cat.name === 'string' && cat.name.toLowerCase().includes(catSearch.toLowerCase())
+    );
 
     // Map Initialization
     useEffect(() => {
@@ -176,13 +209,15 @@ export default function ListYourShop() {
 
     // Handlers
     const addTag = (e) => {
-        if (e.key === 'Enter' && tagInput.trim()) {
-            e.preventDefault();
-            if (!formData.tags.includes(tagInput.trim().toLowerCase())) {
-                setFormData({ ...formData, tags: [...formData.tags, tagInput.trim().toLowerCase()] });
-            }
-            setTagInput('');
+        // Handle both Enter key and Button click
+        if (e && e.key && e.key !== 'Enter') return;
+        if (e && e.preventDefault) e.preventDefault();
+        
+        const tag = tagInput.trim().toLowerCase();
+        if (tag && !formData.tags.includes(tag)) {
+            setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
         }
+        setTagInput('');
     };
 
     const removeTag = (tagToRemove) => {
@@ -321,19 +356,64 @@ export default function ListYourShop() {
                                         placeholder="e.g. Vijayawada Junction Restaurant"
                                     />
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-2 relative" ref={catDropdownRef}>
                                     <label className="text-sm font-bold text-gray-700">Category *</label>
-                                    <select
-                                        value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#ff8938] outline-none transition-all bg-white"
+                                    <div 
+                                        onClick={() => setShowCatDropdown(!showCatDropdown)}
+                                        className={`w-full px-4 py-3 border border-gray-200 rounded-xl outline-none transition-all cursor-pointer flex items-center justify-between bg-white hover:border-[#ff8938] ${showCatDropdown ? 'ring-2 ring-[#ff8938] border-[#ff8938]' : ''}`}
                                     >
-                                        <option>Restaurant</option>
-                                        <option>Pharmacy</option>
-                                        <option>Grocery</option>
-                                        <option>Salon & Spa</option>
-                                        <option>Electronics</option>
-                                        <option>Other</option>
-                                    </select>
+                                        <span className={formData.category ? 'text-gray-900 font-medium' : 'text-gray-400'}>
+                                            {formData.category || 'Select a Category'}
+                                        </span>
+                                        <i className={`fa-solid fa-chevron-down text-xs text-gray-400 transition-transform ${showCatDropdown ? 'rotate-180' : ''}`}></i>
+                                    </div>
+
+                                    {showCatDropdown && (
+                                        <div className="absolute z-50 top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="p-3 border-b border-gray-50 bg-gray-50/50">
+                                                <div className="relative">
+                                                    <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                                                    <input 
+                                                        type="text"
+                                                        placeholder="Search categories..."
+                                                        value={catSearch}
+                                                        onChange={(e) => setCatSearch(e.target.value)}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        autoFocus
+                                                        className="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#ff8938] outline-none transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="max-h-60 overflow-y-auto p-2 space-y-1 scrollbar-thin scrollbar-thumb-gray-200">
+                                                {filteredCategories.length > 0 ? (
+                                                    filteredCategories.map((cat) => (
+                                                        <div 
+                                                            key={cat.id}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setFormData({ ...formData, category: cat.name });
+                                                                setShowCatDropdown(false);
+                                                                setCatSearch('');
+                                                            }}
+                                                            className={`flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all ${formData.category === cat.name ? 'bg-[#ff8938]/10 text-[#ff8938]' : 'hover:bg-gray-50 text-gray-700'}`}
+                                                        >
+                                                            <span className="font-bold text-sm">{cat.name}</span>
+                                                            {formData.category === cat.name && (
+                                                                <i className="fa-solid fa-check text-xs"></i>
+                                                            )}
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="p-8 text-center">
+                                                        <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-gray-300">
+                                                            <i className="fa-solid fa-layer-group"></i>
+                                                        </div>
+                                                        <p className="text-xs text-gray-400 font-medium italic">No categories match your search</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-700">Emoji Icon (Click to pick) *</label>
@@ -528,14 +608,26 @@ export default function ListYourShop() {
                                                 <button type="button" onClick={() => removeTag(tag)} className="hover:text-red-500 text-xs mt-0.5">×</button>
                                             </span>
                                         ))}
-                                        <input
-                                            type="text"
-                                            value={tagInput}
-                                            onChange={e => setTagInput(e.target.value)}
-                                            onKeyDown={addTag}
-                                            placeholder={formData.tags.length === 0 ? "e.g. biriyani, delivery, premium..." : ""}
-                                            className="bg-transparent outline-none flex-1 min-w-[120px] text-sm py-1"
-                                        />
+                                        <div className="flex-1 relative min-w-[150px]">
+                                            <input
+                                                type="text"
+                                                value={tagInput}
+                                                onChange={e => setTagInput(e.target.value)}
+                                                onKeyDown={addTag}
+                                                placeholder={formData.tags.length === 0 ? "e.g. biriyani, delivery, premium..." : "Add more tags..."}
+                                                className="w-full bg-transparent outline-none text-sm py-2 pr-10"
+                                            />
+                                            {tagInput.trim() && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => addTag()}
+                                                    className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-purple-600 text-white rounded-lg flex items-center justify-center hover:bg-purple-700 transition-all shadow-sm animate-in fade-in scale-in-95 duration-200"
+                                                    title="Add Tag"
+                                                >
+                                                    <i className="fa-solid fa-plus text-xs"></i>
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 

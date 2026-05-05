@@ -68,7 +68,7 @@ export default function Header() {
                                             <p className="text-sm font-bold truncate">{user.email}</p>
                                         </div>
                                         {user.role === 'admin' && (
-                                            <Link href="/admin" className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 text-orange-600 font-bold transition-colors border-b border-gray-50">
+                                            <Link href="/admin" className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors text-orange-600 font-bold border-b border-gray-50">
                                                 <i className="fa-solid fa-user-shield"></i> Admin Panel
                                             </Link>
                                         )}
