@@ -1,25 +1,13 @@
 import CategoryCard from '@/components/CategoryCard';
 import SearchSection from '@/components/SearchSection';
 import HeroSection from '@/components/HeroSection';
+import { getCategories } from '@/lib/api';
 
 export const metadata = {
     title: 'Local Discovery | Find Shops & Services Near You',
     description: 'Discover local shops, restaurants, pharmacies and more in your community. AI-based local search for everything you need.',
     keywords: 'local discovery, near me, shops, services, Vijayawada, MERN app',
 };
-
-async function getCategories() {
-    try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/categories`, { 
-            next: { revalidate: 3600 } // Cache for 1 hour
-        });
-        if (!res.ok) throw new Error('Failed to fetch categories');
-        return res.json();
-    } catch (error) {
-        console.error("Fetch Error:", error);
-        return [];
-    }
-}
 
 export default async function HomePage() {
     const categories = await getCategories();

@@ -1,25 +1,87 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /**
- * Fetches shops within a specified radius from the backend.
- * @param {number} lat - Latitude of the search center.
- * @param {number} lng - Longitude of the search center.
- * @param {number} [radius=40000] - Search radius in meters (default 40km).
- * @returns {Promise<Array>} - A promise that resolves to an array of shops.
+ * --- CATEGORY API ---
+ */
+export async function getCategories() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/categories`, { 
+            next: { revalidate: 3600 } // Cache for 1 hour
+        });
+        if (!res.ok) throw new Error('Failed to fetch categories');
+        return res.json();
+    } catch (error) {
+        console.error("Fetch Error in getCategories:", error);
+        return [];
+    }
+}
+
+/**
+ * --- AUTH API ---
+ */
+export async function login(email, password) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Login failed');
+    return data;
+}
+
+export async function signup(fullName, email, password) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, email, password }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Signup failed');
+    return data;
+}
+
+export async function verifyOTP(email, otp) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Verification failed');
+    return data;
+}
+
+export async function getUserProfile(token) {
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to fetch profile');
+    return data;
+}
+
+/**
+ * --- SHOP API ---
  */
 export async function getNearbyShops(lat, lng, radius = 40000) {
     try {
         const url = `${API_BASE_URL}/api/shops?lat=${lat}&lng=${lng}&radius=${radius}`;
         const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status} ${response.statusText}`);
-        }
-        
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
         const data = await response.json();
         return Array.isArray(data) ? data : [];
     } catch (error) {
         console.error("Fetch error in getNearbyShops:", error);
         throw error;
     }
+}
+
+/**
+ * --- EXTERNAL APIS ---
+ */
+export async function reverseGeocode(lat, lon) {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
+    if (!response.ok) throw new Error("Failed to detect city");
+    return response.json();
 }

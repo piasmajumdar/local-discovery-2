@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { signup, verifyOTP } from '@/lib/api';
 
 export default function SignupPage() {
     const [formData, setFormData] = useState({
@@ -27,31 +28,16 @@ export default function SignupPage() {
         setLoading(true);
         setErrors({});
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    fullName: formData.fullName,
-                    email: formData.email,
-                    password: formData.password
-                }),
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                setIsOtpStep(true);
-                setNotification({ type: 'success', message: "OTP sent to your email!" });
-                setTimeout(() => setNotification(null), 3000);
-            } else {
-                if (data.error && data.error.toLowerCase().includes('email')) {
-                    setErrors({ email: data.error });
-                } else {
-                    alert(data.error || "Signup failed");
-                }
-            }
+            await signup(formData.fullName, formData.email, formData.password);
+            setIsOtpStep(true);
+            setNotification({ type: 'success', message: "OTP sent to your email!" });
+            setTimeout(() => setNotification(null), 3000);
         } catch (error) {
-            console.error("Signup error:", error);
-            alert("Failed to contact backend.");
+            if (error.message && error.message.toLowerCase().includes('email')) {
+                setErrors({ email: error.message });
+            } else {
+                alert(error.message || "Signup failed");
+            }
         } finally {
             setLoading(false);
         }
@@ -61,27 +47,13 @@ export default function SignupPage() {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/verify-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: formData.email,
-                    otp: otp
-                }),
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                setNotification({ type: 'success', message: "Verification successful! Redirecting..." });
-                setTimeout(() => {
-                    window.location.href = '/login';
-                }, 2000);
-            } else {
-                setNotification({ type: 'error', message: data.error || "Verification failed" });
-                setTimeout(() => setNotification(null), 4000);
-            }
+            await verifyOTP(formData.email, otp);
+            setNotification({ type: 'success', message: "Verification successful! Redirecting..." });
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
         } catch (error) {
-            setNotification({ type: 'error', message: "Failed to contact backend." });
+            setNotification({ type: 'error', message: error.message || "Verification failed" });
             setTimeout(() => setNotification(null), 4000);
         } finally {
             setLoading(false);

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { reverseGeocode } from '@/lib/api';
 
 export default function SearchSection() {
     const router = useRouter();
@@ -39,8 +40,7 @@ export default function SearchSection() {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`);
-                const data = await response.json();
+                const data = await reverseGeocode(lat, lon);
                 const city = data.address.city || data.address.town || data.address.village || "Unknown";
                 selectCity(city);
             } catch (error) {

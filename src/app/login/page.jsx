@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { login } from '@/lib/api';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -27,28 +28,18 @@ export default function LoginPage() {
         e.preventDefault();
         setLoading(true);
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                // Store session
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                
-                setNotification({ type: 'success', message: "Login successful! Welcome back." });
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 1500);
-            } else {
-                setNotification({ type: 'error', message: data.error || "Login failed" });
-                setTimeout(() => setNotification(null), 4000);
-            }
+            const data = await login(email, password);
+            
+            // Store session
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            
+            setNotification({ type: 'success', message: "Login successful! Welcome back." });
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
         } catch (error) {
-            setNotification({ type: 'error', message: "Failed to contact backend." });
+            setNotification({ type: 'error', message: error.message || "Login failed" });
             setTimeout(() => setNotification(null), 4000);
         } finally {
             setLoading(false);

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getUserProfile } from '@/lib/api';
 
 export default function Dashboard() {
     const [user, setUser] = useState(null);
@@ -16,24 +17,13 @@ export default function Dashboard() {
             }
 
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setUser(data);
-                } else {
-                    // Token might be invalid or expired
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    window.location.href = '/login?message=session_expired';
-                }
+                const data = await getUserProfile(token);
+                setUser(data);
             } catch (err) {
-                setError("Failed to connect to server");
-                console.error(err);
+                // Token might be invalid or expired
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login?message=session_expired';
             } finally {
                 setLoading(false);
             }
