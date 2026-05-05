@@ -16,11 +16,11 @@ function calcRating(reviews) {
 }
 
 function calcDist(lat, lng) {
-  const p = 0.017453292519943295;    
+  const p = 0.017453292519943295;
   const c = Math.cos;
-  const a = 0.5 - c((lat - BASE_LAT) * p)/2 + 
-          c(BASE_LAT * p) * c(lat * p) * 
-          (1 - c((lng - BASE_LNG) * p))/2;
+  const a = 0.5 - c((lat - BASE_LAT) * p) / 2 +
+    c(BASE_LAT * p) * c(lat * p) *
+    (1 - c((lng - BASE_LNG) * p)) / 2;
   return +(12742 * Math.asin(Math.sqrt(a))).toFixed(1);
 }
 
@@ -50,7 +50,7 @@ function sIcon(shop, isActive) {
   const tc = shop.trust >= 90 ? '#16a34a' : shop.trust >= 75 ? '#ca8a04' : shop.trust >= 50 ? '#ea580c' : '#dc2626';
   const sz = isActive ? 44 : 36, bg = isActive ? '#e02020' : '#fff', bor = isActive ? '#b01010' : '#d1d5db';
   const sh = isActive ? '0 0 0 4px rgba(224,32,32,.2),0 4px 14px rgba(0,0,0,.18)' : '0 2px 8px rgba(0,0,0,.14)';
-  
+
   return window.L.divIcon({
     className: '',
     html: `<div style="width:${sz}px;height:${sz}px;background:${bg};border:2.5px solid ${bor};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${isActive ? 22 : 16}px;box-shadow:${sh};transition:all .3s;">${shop.emoji}</div>`,
@@ -95,7 +95,7 @@ const ShopCard = memo(({ shop, isActive, onClick }) => {
   const tcColor = tc(shop.trust);
   const openB = shop.isOpen ? (
     <span className="badge badge-open">
-      <span className="pulse" style={{display:'inline-block', width:'6px', height:'7px', background:'#16a34a', borderRadius:'50%', marginRight:'2px'}}></span>
+      <span className="pulse" style={{ display: 'inline-block', width: '6px', height: '7px', background: '#16a34a', borderRadius: '50%', marginRight: '2px' }}></span>
       Open
     </span>
   ) : (
@@ -103,39 +103,39 @@ const ShopCard = memo(({ shop, isActive, onClick }) => {
   );
   const wB = shop.warning ? (
     <div className="warn-banner">
-      <i className="fa-solid fa-triangle-exclamation" style={{marginTop:'1px', flexShrink:0}}></i>
+      <i className="fa-solid fa-triangle-exclamation" style={{ marginTop: '1px', flexShrink: 0 }}></i>
       {shop.warning}
     </div>
   ) : null;
 
   return (
     <div id={`card-${shop.id}`} className={`shop-card ${isActive ? 'active' : ''}`} onClick={onClick}>
-        <div className="shop-img">
-            {shop.coverImg ? <img src={shop.coverImg} loading="lazy" alt="" /> : <span>{shop.emoji}</span>}
+      <div className="shop-img">
+        {shop.coverImg ? <img src={shop.coverImg} loading="lazy" alt="" /> : <span>{shop.emoji}</span>}
+      </div>
+      <div className="shop-info">
+        <div className="shop-name-row">
+          <div className="shop-name">{shop.name}</div>
+          {openB}
         </div>
-        <div className="shop-info">
-            <div className="shop-name-row">
-                <div className="shop-name">{shop.name}</div>
-                {openB}
-            </div>
-            <div className="shop-sub">
-                {shop.category} · {shop.address.split(',')[0]}
-            </div>
-            <div className="tags-row">
-                {shop.aiRecommended && <span className="badge badge-ai">✨ AI Pick</span>}
-                <span className="badge badge-rating" dangerouslySetInnerHTML={{__html: stars(shop.rating) + ' ' + shop.rating + ' <span style="opacity:.6;font-weight:400">(' + (shop.reviews?.length || 0) + ')</span>'}}></span>
-                <span className="badge badge-dist"><i className="fa-solid fa-location-dot"></i> {shop.distance}km</span>
-                <span className={`badge ${tbClass(shop.trust)}`}><i className="fa-solid fa-shield-halved"></i> {tLabel(shop.trust)}</span>
-            </div>
-            <div className="trust-bar-wrap">
-                <span className="trust-label">Trust</span>
-                <div className="trust-bar">
-                    <div className="trust-fill" style={{width: shop.trust + '%', background: tcColor}}></div>
-                </div>
-                <span className="trust-val" style={{color: tcColor}}>{shop.trust}/100</span>
-            </div>
-            {wB}
+        <div className="shop-sub">
+          {shop.category} · {shop.address.split(',')[0]}
         </div>
+        <div className="tags-row">
+          {shop.aiRecommended && <span className="badge badge-ai">✨ AI Pick</span>}
+          <span className="badge badge-rating" dangerouslySetInnerHTML={{ __html: stars(shop.rating) + ' ' + shop.rating + ' <span style="opacity:.6;font-weight:400">(' + (shop.reviews?.length || 0) + ')</span>' }}></span>
+          <span className="badge badge-dist"><i className="fa-solid fa-location-dot"></i> {shop.distance}km</span>
+          <span className={`badge ${tbClass(shop.trust)}`}><i className="fa-solid fa-shield-halved"></i> {tLabel(shop.trust)}</span>
+        </div>
+        <div className="trust-bar-wrap">
+          <span className="trust-label">Trust</span>
+          <div className="trust-bar">
+            <div className="trust-fill" style={{ width: shop.trust + '%', background: tcColor }}></div>
+          </div>
+          <span className="trust-val" style={{ color: tcColor }}>{shop.trust}/100</span>
+        </div>
+        {wB}
+      </div>
     </div>
   );
 });
@@ -156,7 +156,7 @@ function SearchContent() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  
+
   const [productQuery, setProductQuery] = useState('');
   const [cityName, setCityName] = useState('Vijayawada');
   const [reviewRating, setReviewRating] = useState(0);
@@ -198,12 +198,12 @@ function SearchContent() {
     if (typeof window !== 'undefined' && window.L && !mapRef.current) {
       mapRef.current = window.L.map('map', { zoomControl: false, attributionControl: false }).setView([BASE_LAT, BASE_LNG], 14);
       window.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(mapRef.current);
-      
-      const ic = window.L.divIcon({ 
-        className: '', 
-        html: `<div style="width:16px;height:16px;background:#2563eb;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 4px rgba(37,99,235,.25);"></div>`, 
-        iconSize: [16, 16], 
-        iconAnchor: [8, 8] 
+
+      const ic = window.L.divIcon({
+        className: '',
+        html: `<div style="width:16px;height:16px;background:#2563eb;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 4px rgba(37,99,235,.25);"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
       });
       window.L.marker([BASE_LAT, BASE_LNG], { icon: ic }).addTo(mapRef.current).bindPopup('<div class="popup-name">📍 You are here</div>');
     }
@@ -226,9 +226,9 @@ function SearchContent() {
 
   useEffect(() => {
     if (!mapRef.current || typeof window === 'undefined' || !window.L) return;
-    
+
     const currentMarkerIds = new Set(filtered.map(s => s.id));
-    
+
     // Remove markers that are no longer in the filtered list
     Object.keys(markersRef.current).forEach(id => {
       if (!currentMarkerIds.has(Number(id))) {
@@ -255,11 +255,11 @@ function SearchContent() {
   const applyFilters = () => {
     let f = [...shops];
     const q = searchQuery.toLowerCase().trim();
-    
+
     if (q) {
-      f = f.filter(s => 
-        s.name.toLowerCase().includes(q) || 
-        s.category.toLowerCase().includes(q) || 
+      f = f.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.category.toLowerCase().includes(q) ||
         (s.tags && s.tags.some(t => t.toLowerCase().includes(q))) ||
         (s.products && s.products.some(p => p.name.toLowerCase().includes(q)))
       );
@@ -295,7 +295,7 @@ function SearchContent() {
   const submitReview = () => {
     if (!reviewRating) { alert("Please select a rating."); return; }
     if (!reviewText.trim()) { alert("Please write a review."); return; }
-    
+
     const newRev = {
       id: Date.now(),
       name: "You",
@@ -350,10 +350,10 @@ function SearchContent() {
 
   const lbNav = (d) => {
     setLightboxIndex(prev => {
-        let n = prev + d;
-        if (n < 0) n = lightboxImages.length - 1;
-        if (n >= lightboxImages.length) n = 0;
-        return n;
+      let n = prev + d;
+      if (n < 0) n = lightboxImages.length - 1;
+      if (n >= lightboxImages.length) n = 0;
+      return n;
     });
   };
 
@@ -361,49 +361,49 @@ function SearchContent() {
     const tColor = tc(shop.trust);
     const aiSec = shop.aiRecommended ? (
       <div className="ai-chip">
-        <i className="fa-solid fa-wand-magic-sparkles" style={{marginTop:'1px', flexShrink:0}}></i>
+        <i className="fa-solid fa-wand-magic-sparkles" style={{ marginTop: '1px', flexShrink: 0 }}></i>
         <div>
           <div>{shop.aiReason}</div>
-          <div style={{fontWeight:400, opacity:.75, marginTop:'2px', fontSize:'11px'}}>Evaluated on: price, distance, quality feedback & reliability</div>
+          <div style={{ fontWeight: 400, opacity: .75, marginTop: '2px', fontSize: '11px' }}>Evaluated on: price, distance, quality feedback & reliability</div>
         </div>
       </div>
     ) : null;
     const wSec = shop.warning ? (
       <div className="warn-detail">
-        <i className="fa-solid fa-triangle-exclamation" style={{marginTop:'1px', flexShrink:0}}></i>
+        <i className="fa-solid fa-triangle-exclamation" style={{ marginTop: '1px', flexShrink: 0 }}></i>
         <div>{shop.warning}</div>
       </div>
     ) : null;
-    
+
     return (
       <>
-        <div style={{display:'flex', alignItems:'center', gap:'14px', marginBottom:'14px'}}>
-          <div style={{width:'70px', height:'70px', borderRadius:'12px', overflow:'hidden', border:'1.5px solid var(--border2)', flexShrink:0, background:'#f3f4f6'}}>
-            {shop.coverImg ? <img src={shop.coverImg} style={{width:'100%', height:'100%', objectFit:'cover'}} alt=""/> : <div style={{display:'flex', alignItems:'center', justifyContent:'center', height:'100%', fontSize:'28px'}}>{shop.emoji}</div>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
+          <div style={{ width: '70px', height: '70px', borderRadius: '12px', overflow: 'hidden', border: '1.5px solid var(--border2)', flexShrink: 0, background: '#f3f4f6' }}>
+            {shop.coverImg ? <img src={shop.coverImg} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '28px' }}>{shop.emoji}</div>}
           </div>
           <div>
-            <div style={{fontFamily:"'Manrope',sans-serif", fontSize:'20px', fontWeight:800, color:'var(--text)'}}>{shop.name}</div>
-            <div style={{fontSize:'12px', color:'var(--muted)'}}>{shop.category}</div>
+            <div style={{ fontFamily: "'Manrope',sans-serif", fontSize: '20px', fontWeight: 800, color: 'var(--text)' }}>{shop.name}</div>
+            <div style={{ fontSize: '12px', color: 'var(--muted)' }}>{shop.category}</div>
           </div>
         </div>
         {aiSec}
-        <div className="tags-row" style={{marginBottom:'12px'}}>
-          {shop.isOpen ? 
-            <span className="badge badge-open" style={{padding:'4px 10px', fontSize:'12px'}}><span className="pulse" style={{display:'inline-block', width:'7px', height:'7px', background:'#16a34a', borderRadius:'50%', marginRight:'3px'}}></span>Open Now</span> : 
-            <span className="badge badge-closed" style={{padding:'4px 10px', fontSize:'12px'}}>⛔ Closed</span>
+        <div className="tags-row" style={{ marginBottom: '12px' }}>
+          {shop.isOpen ?
+            <span className="badge badge-open" style={{ padding: '4px 10px', fontSize: '12px' }}><span className="pulse" style={{ display: 'inline-block', width: '7px', height: '7px', background: '#16a34a', borderRadius: '50%', marginRight: '3px' }}></span>Open Now</span> :
+            <span className="badge badge-closed" style={{ padding: '4px 10px', fontSize: '12px' }}>⛔ Closed</span>
           }
-          <span className="badge badge-rating" style={{padding:'4px 10px', fontSize:'12px'}} dangerouslySetInnerHTML={{__html: stars(shop.rating) + ' ' + shop.rating + ' <span style="opacity:.6;font-weight:400;">(' + (shop.reviews?.length || 0) + ')</span>'}}></span>
-          <span className="badge badge-dist" style={{padding:'4px 10px', fontSize:'12px'}}><i className="fa-solid fa-location-dot"></i> {shop.distance}km</span>
-          <span className={`badge ${tbClass(shop.trust)}`} style={{padding:'4px 10px', fontSize:'12px'}}><i className="fa-solid fa-shield-halved"></i> {tLabel(shop.trust)}</span>
+          <span className="badge badge-rating" style={{ padding: '4px 10px', fontSize: '12px' }} dangerouslySetInnerHTML={{ __html: stars(shop.rating) + ' ' + shop.rating + ' <span style="opacity:.6;font-weight:400;">(' + (shop.reviews?.length || 0) + ')</span>' }}></span>
+          <span className="badge badge-dist" style={{ padding: '4px 10px', fontSize: '12px' }}><i className="fa-solid fa-location-dot"></i> {shop.distance}km</span>
+          <span className={`badge ${tbClass(shop.trust)}`} style={{ padding: '4px 10px', fontSize: '12px' }}><i className="fa-solid fa-shield-halved"></i> {tLabel(shop.trust)}</span>
         </div>
-        <div className="trust-bar-wrap" style={{marginBottom:'14px'}}>
-          <span className="trust-label" style={{fontSize:'12px'}}>Trust Score</span>
-          <div className="trust-bar" style={{height:'5px'}}><div className="trust-fill" style={{width: shop.trust + '%', background: tColor}}></div></div>
-          <span className="trust-val" style={{fontSize:'12px', color:tColor}}>{shop.trust}/100 — {tLabel(shop.trust)}</span>
+        <div className="trust-bar-wrap" style={{ marginBottom: '14px' }}>
+          <span className="trust-label" style={{ fontSize: '12px' }}>Trust Score</span>
+          <div className="trust-bar" style={{ height: '5px' }}><div className="trust-fill" style={{ width: shop.trust + '%', background: tColor }}></div></div>
+          <span className="trust-val" style={{ fontSize: '12px', color: tColor }}>{shop.trust}/100 — {tLabel(shop.trust)}</span>
         </div>
         {wSec}
-        
-        <hr className="divider"/>
+
+        <hr className="divider" />
         <div className="section-label">Top Products Preview</div>
         <div className="product-grid">
           {(shop.products || []).slice(0, 4).map((p, i) => (
@@ -414,7 +414,7 @@ function SearchContent() {
           ))}
         </div>
         {shop.products && shop.products.length > 4 && (
-          <div style={{fontSize:'12px', color:'#ff8938', marginTop:'8px', cursor:'pointer'}} onClick={() => setDetailTab('products')}>
+          <div style={{ fontSize: '12px', color: '#ff8938', marginTop: '8px', cursor: 'pointer' }} onClick={() => setDetailTab('products')}>
             View all {shop.products.length} products →
           </div>
         )}
@@ -426,16 +426,16 @@ function SearchContent() {
     const f = (shop.products || []).filter(p => p.name.toLowerCase().includes(productQuery.toLowerCase()));
     return (
       <>
-        <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'14px'}}>
-          <div style={{fontFamily:"'Manrope',sans-serif", fontSize:'17px', fontWeight:800}}>Products & Services</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <div style={{ fontFamily: "'Manrope',sans-serif", fontSize: '17px', fontWeight: 800 }}>Products & Services</div>
           <span className="badge badge-dist">{shop.products ? shop.products.length : 0} items</span>
         </div>
-        <input 
-          type="text" 
-          placeholder="Search products…" 
+        <input
+          type="text"
+          placeholder="Search products…"
           value={productQuery}
           onChange={(e) => setProductQuery(e.target.value)}
-          style={{width:'100%', border:'1.5px solid var(--border2)', borderRadius:'10px', padding:'9px 14px', fontFamily:"'Open Sans',sans-serif", fontSize:'13px', outline:'none', marginBottom:'12px', background:'var(--surface2)', color:'var(--text)'}}
+          style={{ width: '100%', border: '1.5px solid var(--border2)', borderRadius: '10px', padding: '9px 14px', fontFamily: "'Open Sans',sans-serif", fontSize: '13px', outline: 'none', marginBottom: '12px', background: 'var(--surface2)', color: 'var(--text)' }}
         />
         <div className="product-grid">
           {f.map((p, i) => (
@@ -444,7 +444,7 @@ function SearchContent() {
               <span className="product-price">{p.price}</span>
             </div>
           ))}
-          {f.length === 0 && <div style={{gridColumn:'span 2', textAlign:'center', padding:'20px', color:'var(--muted)', fontSize:'13px'}}>No products match "{productQuery}"</div>}
+          {f.length === 0 && <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '20px', color: 'var(--muted)', fontSize: '13px' }}>No products match "{productQuery}"</div>}
         </div>
       </>
     );
@@ -454,27 +454,27 @@ function SearchContent() {
     const imgs = shop.images || [];
     return (
       <>
-        <div style={{fontFamily:"'Manrope',sans-serif", fontSize:'17px', fontWeight:800, marginBottom:'14px'}}>{shop.name} — {imgs.length} Photo{imgs.length !== 1 ? 's' : ''}</div>
+        <div style={{ fontFamily: "'Manrope',sans-serif", fontSize: '17px', fontWeight: 800, marginBottom: '14px' }}>{shop.name} — {imgs.length} Photo{imgs.length !== 1 ? 's' : ''}</div>
         {!imgs.length ? (
-          <div className="gallery-empty"><i className="fa-solid fa-images" style={{fontSize:'32px', color:'var(--border2)'}}></i><span style={{fontSize:'13px', color:'var(--muted)'}}>No photos yet — be the first!</span></div>
+          <div className="gallery-empty"><i className="fa-solid fa-images" style={{ fontSize: '32px', color: 'var(--border2)' }}></i><span style={{ fontSize: '13px', color: 'var(--muted)' }}>No photos yet — be the first!</span></div>
         ) : (
           <div className="gallery-grid">
             {imgs.slice(0, 5).map((src, i) => {
-              if (i === 0) return <div key={i} className="gallery-main" onClick={() => openLB(0, imgs)}><img src={src} alt="" loading="lazy"/></div>;
+              if (i === 0) return <div key={i} className="gallery-main" onClick={() => openLB(0, imgs)}><img src={src} alt="" loading="lazy" /></div>;
               return (
                 <div key={i} className="gallery-cell" onClick={() => openLB(i, imgs)}>
-                  <img src={src} alt="" loading="lazy"/>
+                  <img src={src} alt="" loading="lazy" />
                   {i === 4 && imgs.length > 5 && <div className="gallery-more">+{imgs.length - 5} more</div>}
                 </div>
               );
             })}
           </div>
         )}
-        <hr className="divider"/>
+        <hr className="divider" />
         <div className="section-label">Upload Your Photos</div>
-        <label className="photo-upload-btn" style={{display:'inline-block', padding:'10px 20px', border:'1.5px dashed var(--border2)', borderRadius:'12px', cursor:'pointer', fontSize:'13px', color:'var(--muted)'}}>
+        <label className="photo-upload-btn" style={{ display: 'inline-block', padding: '10px 20px', border: '1.5px dashed var(--border2)', borderRadius: '12px', cursor: 'pointer', fontSize: '13px', color: 'var(--muted)' }}>
           <i className="fa-solid fa-camera"></i> Choose Photos
-          <input type="file" accept="image/*" multiple style={{display:'none'}} />
+          <input type="file" accept="image/*" multiple style={{ display: 'none' }} />
         </label>
       </>
     );
@@ -493,16 +493,16 @@ function SearchContent() {
     return (
       <>
         <div className="review-summary">
-          <div style={{textAlign:'center', flexShrink:0}}>
+          <div style={{ textAlign: 'center', flexShrink: 0 }}>
             <div className="rev-big-num">{shop.rating}</div>
-            <div className="rev-big-stars" dangerouslySetInnerHTML={{__html: stars(shop.rating, true)}}></div>
+            <div className="rev-big-stars" dangerouslySetInnerHTML={{ __html: stars(shop.rating, true) }}></div>
             <div className="rev-big-count">{rLen} reviews</div>
           </div>
-          <div style={{flex:1}}>
+          <div style={{ flex: 1 }}>
             {[5, 4, 3, 2, 1].map(n => (
               <div className="rev-bar-row" key={n}>
                 <div className="rev-bar-label">{n}</div>
-                <div className="rev-bar-track"><div className="rev-bar-fill" style={{width: Math.round((dist[n] / maxD) * 100) + '%'}}></div></div>
+                <div className="rev-bar-track"><div className="rev-bar-fill" style={{ width: Math.round((dist[n] / maxD) * 100) + '%' }}></div></div>
                 <div className="rev-bar-count">{dist[n]}</div>
               </div>
             ))}
@@ -513,74 +513,74 @@ function SearchContent() {
           <div className="section-label">Write a Review</div>
           <div className="star-picker">
             {[1, 2, 3, 4, 5].map(n => (
-              <span 
-                key={n} 
-                className={`star-btn ${reviewRating >= n ? 'active' : ''}`} 
+              <span
+                key={n}
+                className={`star-btn ${reviewRating >= n ? 'active' : ''}`}
                 onClick={() => setReviewRating(n)}
-                style={{cursor:'pointer', fontSize:'24px', color: reviewRating >= n ? '#fbbf24' : '#e5e7eb'}}
+                style={{ cursor: 'pointer', fontSize: '24px', color: reviewRating >= n ? '#fbbf24' : '#e5e7eb' }}
               >
                 {reviewRating >= n ? '★' : '☆'}
               </span>
             ))}
           </div>
-          <textarea 
-            className="review-textarea" 
+          <textarea
+            className="review-textarea"
             placeholder={`Share your experience at ${shop.name}…`}
             value={reviewText}
             onChange={(e) => setReviewText(e.target.value)}
             rows="3"
-            style={{width:'100%', border:'1.5px solid var(--border2)', borderRadius:'10px', padding:'10px', fontSize:'13px', marginTop:'10px', outline:'none', background:'var(--surface2)', color:'var(--text)'}}
+            style={{ width: '100%', border: '1.5px solid var(--border2)', borderRadius: '10px', padding: '10px', fontSize: '13px', marginTop: '10px', outline: 'none', background: 'var(--surface2)', color: 'var(--text)' }}
           />
-          <div style={{marginTop:'10px'}}>
-            <label className="photo-upload-btn" style={{display:'inline-block', padding:'8px 16px', border:'1.5px dashed var(--border2)', borderRadius:'10px', cursor:'pointer', fontSize:'12px', color:'var(--muted)'}}>
+          <div style={{ marginTop: '10px' }}>
+            <label className="photo-upload-btn" style={{ display: 'inline-block', padding: '8px 16px', border: '1.5px dashed var(--border2)', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', color: 'var(--muted)' }}>
               <i className="fa-solid fa-camera-retro"></i> Add Photos
-              <input type="file" accept="image/*" multiple style={{display:'none'}} onChange={handleRevPhoto} />
+              <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleRevPhoto} />
             </label>
-            <div className="photo-preview-row" style={{display:'flex', gap:'8px', marginTop:'8px', overflowX:'auto'}}>
+            <div className="photo-preview-row" style={{ display: 'flex', gap: '8px', marginTop: '8px', overflowX: 'auto' }}>
               {reviewPhotos.map((p, i) => (
-                <img key={i} src={p} style={{width:'50px', height:'50px', objectFit:'cover', borderRadius:'6px', border:'1px solid var(--border2)'}} alt="" />
+                <img key={i} src={p} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border2)' }} alt="" />
               ))}
             </div>
           </div>
-          <button className="submit-review-btn" onClick={submitReview} style={{marginTop:'10px', width:'100%', padding:'10px', borderRadius:'10px', background:'var(--grad)', color:'#fff', fontWeight:700, border:'none', cursor:'pointer'}}>
+          <button className="submit-review-btn" onClick={submitReview} style={{ marginTop: '10px', width: '100%', padding: '10px', borderRadius: '10px', background: 'var(--grad)', color: '#fff', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
             <i className="fa-solid fa-paper-plane"></i> Submit Review
           </button>
         </div>
 
-        <div className="section-label" style={{marginBottom:'12px'}}>{shop.reviews ? shop.reviews.length : 0} Customer Reviews</div>
-        <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
+        <div className="section-label" style={{ marginBottom: '12px' }}>{shop.reviews ? shop.reviews.length : 0} Customer Reviews</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {shop.reviews.map(r => (
             <div key={r.id} className="review-card">
               <div className="reviewer-row">
-                <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-                  <div className="reviewer-avatar" style={{width:'32px', height:'32px', background:'var(--grad)', color:'#fff', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:700}}>{r.init}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="reviewer-avatar" style={{ width: '32px', height: '32px', background: 'var(--grad)', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>{r.init}</div>
                   <div>
-                    <div className="reviewer-name" style={{fontSize:'13px', fontWeight:700}}>{r.name}</div>
-                    <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
-                      <div dangerouslySetInnerHTML={{__html: stars(r.rating)}}></div>
-                      <span className="reviewer-date" style={{fontSize:'11px', color:'var(--muted)'}}>{r.date}</span>
+                    <div className="reviewer-name" style={{ fontSize: '13px', fontWeight: 700 }}>{r.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div dangerouslySetInnerHTML={{ __html: stars(r.rating) }}></div>
+                      <span className="reviewer-date" style={{ fontSize: '11px', color: 'var(--muted)' }}>{r.date}</span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="review-text" style={{fontSize:'13px', color:'var(--text2)', lineHeight:1.5, marginTop:'8px'}}>{r.text}</div>
+              <div className="review-text" style={{ fontSize: '13px', color: 'var(--text2)', lineHeight: 1.5, marginTop: '8px' }}>{r.text}</div>
               {r.photos && r.photos.length > 0 && (
-                <div className="review-photos" style={{display:'flex', gap:'8px', marginTop:'10px', overflowX:'auto'}}>
+                <div className="review-photos" style={{ display: 'flex', gap: '8px', marginTop: '10px', overflowX: 'auto' }}>
                   {r.photos.map((ph, pi) => (
-                    <img 
-                      key={pi} 
-                      src={ph} 
-                      className="review-photo" 
+                    <img
+                      key={pi}
+                      src={ph}
+                      className="review-photo"
                       onClick={() => openLB(pi, r.photos)}
-                      style={{width:'80px', height:'80px', objectFit:'cover', borderRadius:'8px', cursor:'pointer', border:'1px solid var(--border2)'}} 
-                      alt="" 
+                      style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer', border: '1px solid var(--border2)' }}
+                      alt=""
                     />
                   ))}
                 </div>
               )}
             </div>
           ))}
-          {shop.reviews.length === 0 && <div style={{textAlign:'center', padding:'40px', color:'var(--muted)'}}>No reviews yet</div>}
+          {shop.reviews.length === 0 && <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>No reviews yet</div>}
         </div>
       </>
     );
@@ -610,27 +610,27 @@ function SearchContent() {
   useEffect(() => {
     let timeoutId;
     if (isDetailOpen && detailShop && typeof window !== 'undefined' && window.L) {
-        timeoutId = setTimeout(() => {
-            try {
-                if (dMapRef.current) {
-                    dMapRef.current.remove();
-                    dMapRef.current = null;
-                }
-                dMapRef.current = window.L.map('detailMap', { zoomControl: false, attributionControl: false }).setView([detailShop.lat, detailShop.lng], 15);
-                window.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(dMapRef.current);
-                window.L.marker([detailShop.lat, detailShop.lng], { icon: sIcon(detailShop, true) }).addTo(dMapRef.current);
-            } catch (err) {
-                console.error("Error initializing detail map:", err);
-            }
-        }, 150);
+      timeoutId = setTimeout(() => {
+        try {
+          if (dMapRef.current) {
+            dMapRef.current.remove();
+            dMapRef.current = null;
+          }
+          dMapRef.current = window.L.map('detailMap', { zoomControl: false, attributionControl: false }).setView([detailShop.lat, detailShop.lng], 15);
+          window.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(dMapRef.current);
+          window.L.marker([detailShop.lat, detailShop.lng], { icon: sIcon(detailShop, true) }).addTo(dMapRef.current);
+        } catch (err) {
+          console.error("Error initializing detail map:", err);
+        }
+      }, 150);
     }
 
     return () => {
-        if (timeoutId) clearTimeout(timeoutId);
-        if (dMapRef.current) {
-            dMapRef.current.remove();
-            dMapRef.current = null;
-        }
+      if (timeoutId) clearTimeout(timeoutId);
+      if (dMapRef.current) {
+        dMapRef.current.remove();
+        dMapRef.current = null;
+      }
     };
   }, [isDetailOpen, detailShop]);
 
@@ -643,33 +643,33 @@ function SearchContent() {
             <input type="search" placeholder="Search for shops, services, or essentials..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
             <button className="hdr-search-btn"><i className="fa-solid fa-magnifying-glass-location"></i></button>
           </div>
-          <div className="hdr-right" style={{display:'flex', alignItems:'center', gap:'15px'}}>
+          <div className="hdr-right" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <Link href="/list-your-shop" className="btn-list"><i className="fa-solid fa-shop"></i> List your shop</Link>
-            
+
             {user ? (
-              <div className="relative" style={{position:'relative'}}>
-                <button 
+              <div className="relative" style={{ position: 'relative' }}>
+                <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  style={{display:'flex', alignItems:'center', gap:'8px', background:'var(--surface2)', border:'1.5px solid var(--border2)', padding:'4px 8px', borderRadius:'30px', cursor:'pointer'}}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--surface2)', border: '1.5px solid var(--border2)', padding: '4px 8px', borderRadius: '30px', cursor: 'pointer' }}
                 >
-                  <div style={{width:'32px', height:'32px', borderRadius:'50%', background:'var(--grad)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, overflow:'hidden'}}>
-                    {user.photo ? <img src={user.photo} style={{width:'100%', height:'100%', objectFit:'cover'}} alt=""/> : user.fullName.charAt(0).toUpperCase()}
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--grad)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, overflow: 'hidden' }}>
+                    {user.photo ? <img src={user.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : user.fullName.charAt(0).toUpperCase()}
                   </div>
-                  <i className={`fa-solid fa-chevron-down`} style={{fontSize:'10px', color:'var(--muted)', transition:'transform 0.3s', transform: isMenuOpen ? 'rotate(180deg)' : 'none'}}></i>
+                  <i className={`fa-solid fa-chevron-down`} style={{ fontSize: '10px', color: 'var(--muted)', transition: 'transform 0.3s', transform: isMenuOpen ? 'rotate(180deg)' : 'none' }}></i>
                 </button>
 
                 {isMenuOpen && (
-                  <div style={{position:'absolute', right:0, top:'100%', marginTop:'10px', width:'200px', background:'var(--surface)', border:'1.5px solid var(--border2)', borderRadius:'12px', boxShadow:'0 10px 25px rgba(0,0,0,0.1)', padding:'8px 0', zIndex:2000}}>
-                    <div style={{padding:'8px 16px', borderBottom:'1px solid var(--border2)', marginBottom:'5px'}}>
-                      <div style={{fontSize:'11px', color:'var(--muted)'}}>Signed in as</div>
-                      <div style={{fontSize:'13px', fontWeight:700, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>{user.fullName}</div>
+                  <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: '10px', width: '200px', background: 'var(--surface)', border: '1.5px solid var(--border2)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '8px 0', zIndex: 2000 }}>
+                    <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border2)', marginBottom: '5px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Signed in as</div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.fullName}</div>
                     </div>
-                    <Link href="/dashboard" style={{display:'flex', alignItems:'center', gap:'10px', padding:'10px 16px', color:'var(--text)', fontSize:'13px', textDecoration:'none'}} className="hover:bg-gray-100">
-                      <i className="fa-solid fa-gauge-high" style={{color:'var(--muted)'}}></i> Dashboard
+                    <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', color: 'var(--text)', fontSize: '13px', textDecoration: 'none' }} className="hover:bg-gray-100">
+                      <i className="fa-solid fa-gauge-high" style={{ color: 'var(--muted)' }}></i> Dashboard
                     </Link>
-                    <div 
+                    <div
                       onClick={handleLogout}
-                      style={{display:'flex', alignItems:'center', gap:'10px', padding:'10px 16px', color:'#dc2626', fontSize:'13px', cursor:'pointer'}}
+                      style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', color: '#dc2626', fontSize: '13px', cursor: 'pointer' }}
                       className="hover:bg-red-50"
                     >
                       <i className="fa-solid fa-right-from-bracket"></i> Log Out
@@ -691,11 +691,11 @@ function SearchContent() {
         <div className={`pill ${activeFilter === 'nearby' ? 'active' : ''}`} onClick={() => setActiveFilter('nearby')}>📍 Under 1 km</div>
         <div className={`pill ${activeFilter === 'top' ? 'active' : ''}`} onClick={() => setActiveFilter('top')}>⭐ Top Rated</div>
         <div className={`pill ${activeFilter === 'trusted' ? 'active' : ''}`} onClick={() => setActiveFilter('trusted')}>🛡️ High Trust</div>
-        {activeFilter && <div className="pill" onClick={() => setActiveFilter('')} style={{background: 'var(--border)', color: 'var(--text)'}}>✕ Clear</div>}
+        {activeFilter && <div className="pill" onClick={() => setActiveFilter('')} style={{ background: 'var(--border)', color: 'var(--text)' }}>✕ Clear</div>}
       </div>
 
       <div className="main-layout">
-        <div className="left-panel" style={{width: '530px'}}>
+        <div className="left-panel" style={{ width: '530px' }}>
           <div className="panel-header">
             <div className="result-count">
               <span>{filtered.length}</span> shops near {cityName}
@@ -716,11 +716,11 @@ function SearchContent() {
             ) : (
               <>
                 {filtered.map(shop => (
-                  <ShopCard 
-                    key={shop.id} 
-                    shop={shop} 
-                    isActive={activeId === shop.id} 
-                    onClick={() => openDetail(shop.id)} 
+                  <ShopCard
+                    key={shop.id}
+                    shop={shop}
+                    isActive={activeId === shop.id}
+                    onClick={() => openDetail(shop.id)}
                   />
                 ))}
                 {!filtered.length && <div className="no-results"><i className="fa-solid fa-store-slash"></i><p>No shops found. Try adjusting your filters.</p></div>}
@@ -729,11 +729,11 @@ function SearchContent() {
           </div>
         </div>
         <div className="right-panel">
-          <div id="map" style={{height:'100%', width:'100%', borderRadius:'0'}}></div>
+          <div id="map" style={{ height: '100%', width: '100%', borderRadius: '0' }}></div>
           <div className="map-fab">
-            <div className="map-btn" title="My Location" onClick={() => { if(mapRef.current) mapRef.current.setView([BASE_LAT, BASE_LNG], 15) }}><i className="fa-solid fa-location-crosshairs"></i></div>
-            <div className="map-btn" title="Zoom In" onClick={() => { if(mapRef.current) mapRef.current.zoomIn() }}><i className="fa-solid fa-plus"></i></div>
-            <div className="map-btn" title="Zoom Out" onClick={() => { if(mapRef.current) mapRef.current.zoomOut() }}><i className="fa-solid fa-minus"></i></div>
+            <div className="map-btn" title="My Location" onClick={() => { if (mapRef.current) mapRef.current.setView([BASE_LAT, BASE_LNG], 15) }}><i className="fa-solid fa-location-crosshairs"></i></div>
+            <div className="map-btn" title="Zoom In" onClick={() => { if (mapRef.current) mapRef.current.zoomIn() }}><i className="fa-solid fa-plus"></i></div>
+            <div className="map-btn" title="Zoom Out" onClick={() => { if (mapRef.current) mapRef.current.zoomOut() }}><i className="fa-solid fa-minus"></i></div>
           </div>
         </div>
       </div>
@@ -749,33 +749,33 @@ function SearchContent() {
           </div>
           <div className="detail-body">
             <div className="detail-left">
-                {detailShop && detailTab === 'overview' && renderOverview(detailShop)}
-                {detailShop && detailTab === 'products' && renderProducts(detailShop)}
-                {detailShop && detailTab === 'photos' && renderPhotos(detailShop)}
-                {detailShop && detailTab === 'reviews' && renderReviews(detailShop)}
+              {detailShop && detailTab === 'overview' && renderOverview(detailShop)}
+              {detailShop && detailTab === 'products' && renderProducts(detailShop)}
+              {detailShop && detailTab === 'photos' && renderPhotos(detailShop)}
+              {detailShop && detailTab === 'reviews' && renderReviews(detailShop)}
             </div>
             <div className="detail-right">
-                <div className="section-label">Location</div>
-                <div style={{height:'180px', borderRadius:'12px', overflow:'hidden', border:'1.5px solid var(--border2)', marginBottom:'5px'}}>
-                    <div id="detailMap" style={{height:'100%', width:'100%'}}></div>
-                </div>
-                <div style={{fontSize:'12px', color:'var(--muted)', marginTop:'5px', marginBottom:'10px', lineHeight:1.5}}>
-                  <i className="fa-solid fa-location-dot" style={{color:'#ff8938', marginRight:'5px'}}></i>
-                  {detailShop?.address}
-                </div>
-                <div style={{display:'flex', gap:'8px', flexWrap:'wrap', marginBottom:'15px'}}>
-                  <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${detailShop?.lat},${detailShop?.lng}`, '_blank')} className="action-btn btn-primary" style={{flex:1}}><i className="fa-solid fa-diamond-turn-right"></i> Directions</button>
-                  <button onClick={() => window.open(`tel:${detailShop?.phone}`)} className="action-btn btn-secondary"><i className="fa-solid fa-phone"></i> Call</button>
-                </div>
-                
-                <hr className="divider" style={{margin:'10px 0'}} />
-                <div className="section-label">Hours & Contact</div>
-                <div className="info-row"><i className="fa-solid fa-clock"></i><div>{detailShop?.hours}</div></div>
-                <div className="info-row"><i className="fa-solid fa-phone"></i><strong>{detailShop?.phone}</strong></div>
-                
-                <hr className="divider" style={{margin:'10px 0'}} />
-                <div className="section-label">Tags</div>
-                <div className="tags-row">{detailShop?.tags && detailShop.tags.map((t, i) => <span key={i} className="badge badge-dist">#{t}</span>)}</div>
+              <div className="section-label">Location</div>
+              <div style={{ height: '180px', borderRadius: '12px', overflow: 'hidden', border: '1.5px solid var(--border2)', marginBottom: '5px' }}>
+                <div id="detailMap" style={{ height: '100%', width: '100%' }}></div>
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '5px', marginBottom: '10px', lineHeight: 1.5 }}>
+                <i className="fa-solid fa-location-dot" style={{ color: '#ff8938', marginRight: '5px' }}></i>
+                {detailShop?.address}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '15px' }}>
+                <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${detailShop?.lat},${detailShop?.lng}`, '_blank')} className="action-btn btn-primary" style={{ flex: 1 }}><i className="fa-solid fa-diamond-turn-right"></i> Directions</button>
+                <button onClick={() => window.open(`tel:${detailShop?.phone}`)} className="action-btn btn-secondary"><i className="fa-solid fa-phone"></i> Call</button>
+              </div>
+
+              <hr className="divider" style={{ margin: '10px 0' }} />
+              <div className="section-label">Hours & Contact</div>
+              <div className="info-row"><i className="fa-solid fa-clock"></i><div>{detailShop?.hours}</div></div>
+              <div className="info-row"><i className="fa-solid fa-phone"></i><strong>{detailShop?.phone}</strong></div>
+
+              <hr className="divider" style={{ margin: '10px 0' }} />
+              <div className="section-label">Tags</div>
+              <div className="tags-row">{detailShop?.tags && detailShop.tags.map((t, i) => <span key={i} className="badge badge-dist">#{t}</span>)}</div>
             </div>
           </div>
         </div>

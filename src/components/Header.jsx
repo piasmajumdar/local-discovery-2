@@ -30,7 +30,7 @@ export default function Header() {
             <nav className="w-11/12 sm:w-10/12 mx-auto flex justify-between items-center pb-5">
                 <div>
                     <Link href="/">
-                        <h4 className="text-md sm:text-2xl flex flex-col sm:flex-row font-bold">
+                        <h4 className="text-xl sm:text-3xl flex flex-col sm:flex-row font-bold">
                             <span className="text-[red]">Local </span>
                             <span>Discovery</span></h4>
                     </Link>
