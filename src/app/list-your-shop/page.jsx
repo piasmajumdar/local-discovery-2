@@ -23,8 +23,15 @@ export default function ListYourShop() {
         products: [{ name: '', price: '' }],
         coverImg: '',
         images: [''],
+        warning: null,
+        aiReason: '',
+        isVerifiedByAdmin: false,
     });
 
+    const [selectedFiles, setSelectedFiles] = useState([]);
+
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadSuccess, setUploadSuccess] = useState(false);
     const [tagInput, setTagInput] = useState('');
     const [showMapModal, setShowMapModal] = useState(false);
     const [showEmojiModal, setShowEmojiModal] = useState(false);
@@ -197,7 +204,7 @@ export default function ListYourShop() {
         setFormData({ ...formData, products: newProducts });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         // Validation
@@ -210,7 +217,6 @@ export default function ListYourShop() {
 
         const finalData = {
             ...formData,
-            id: Math.floor(Math.random() * 10000), // Demo ID
             trust: 50, // Initial trust score
             aiRecommended: false,
             reviews: [],
@@ -219,12 +225,46 @@ export default function ListYourShop() {
                 coordinates: [formData.lng, formData.lat]
             },
             createdAt: new Date().toISOString(),
-            userId: user.userId
+            userId: user?.userId || 'guest'
         };
 
-        console.log("=== NEW SHOP DATA SUBMISSION (DEMO) ===");
-        console.log(JSON.stringify(finalData, null, 2));
-        alert("Success! Check the browser console (F12) to see the shop data JSON.");
+        // Prepare FormData
+        const data = new FormData();
+        // We send shopData as a string so backend can parse it
+        data.append('shopData', JSON.stringify(finalData));
+        
+        // Append actual file objects
+        selectedFiles.forEach((file) => {
+            data.append('images', file);
+        });
+
+        try {
+            setIsUploading(true);
+            setNotification({ type: 'success', message: "Uploading shop data and photos..." });
+            
+            const response = await fetch('http://localhost:5000/api/shops/add', {
+                method: 'POST',
+                body: data,
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                setUploadSuccess(true);
+                setNotification({ type: 'success', message: "Shop listed successfully! Redirecting..." });
+                setTimeout(() => {
+                    setIsUploading(false);
+                    router.push('/dashboard');
+                }, 2000);
+            } else {
+                setIsUploading(false);
+                setNotification({ type: 'error', message: "Upload failed: " + (result.error || "Unknown error") });
+            }
+        } catch (err) {
+            setIsUploading(false);
+            console.error("Upload error:", err);
+            setNotification({ type: 'error', message: "Connection error to backend." });
+        }
     };
 
     if (loading) return null;
@@ -344,11 +384,14 @@ export default function ListYourShop() {
                                             if (files.length > 0) {
                                                 const newPreviews = files.map(file => URL.createObjectURL(file));
                                                 const updatedImages = [...formData.images.filter(img => img !== ''), ...newPreviews];
+                                                const updatedFiles = [...selectedFiles, ...files];
+                                                
                                                 setFormData({
                                                     ...formData,
                                                     coverImg: updatedImages[0],
                                                     images: updatedImages
                                                 });
+                                                setSelectedFiles(updatedFiles);
                                             }
                                         }}
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
@@ -378,14 +421,21 @@ export default function ListYourShop() {
                                                 onDragOver={(e) => e.preventDefault()}
                                                 onDrop={(e) => {
                                                     const draggedIdx = parseInt(e.dataTransfer.getData('draggedIdx'));
+                                                    
                                                     const updatedImages = [...formData.images];
-                                                    const [draggedItem] = updatedImages.splice(draggedIdx, 1);
-                                                    updatedImages.splice(idx, 0, draggedItem);
+                                                    const [draggedImg] = updatedImages.splice(draggedIdx, 1);
+                                                    updatedImages.splice(idx, 0, draggedImg);
+
+                                                    const updatedFiles = [...selectedFiles];
+                                                    const [draggedFile] = updatedFiles.splice(draggedIdx, 1);
+                                                    updatedFiles.splice(idx, 0, draggedFile);
+
                                                     setFormData({
                                                         ...formData,
                                                         images: updatedImages,
                                                         coverImg: updatedImages[0]
                                                     });
+                                                    setSelectedFiles(updatedFiles);
                                                 }}
                                                 className={`relative rounded-2xl overflow-hidden group aspect-square shadow-sm border-2 cursor-move active:scale-95 transition-all ${idx === 0 ? 'border-pink-500 ring-4 ring-pink-500/10' : 'border-white hover:border-pink-200'}`}
                                             >
@@ -398,11 +448,13 @@ export default function ListYourShop() {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         const newImgs = formData.images.filter((_, i) => i !== idx);
+                                                        const newFiles = selectedFiles.filter((_, i) => i !== idx);
                                                         setFormData({
                                                             ...formData,
                                                             images: newImgs,
                                                             coverImg: newImgs[0] || ''
                                                         });
+                                                        setSelectedFiles(newFiles);
                                                     }}
                                                     className="absolute top-2 right-2 w-8 h-8 bg-red-600/80 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all z-20 pointer-events-auto shadow-lg"
                                                 >
@@ -789,6 +841,45 @@ export default function ListYourShop() {
                         <div className="p-4 bg-orange-50 border-t border-orange-100 text-center">
                             <p className="text-[10px] text-orange-600 font-bold uppercase">The HTML Code will be saved automatically</p>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Uploading Modal */}
+            {isUploading && (
+                <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 bg-white/40 backdrop-blur-md animate-in fade-in duration-500">
+                    <div className="bg-white/90 p-10 rounded-[3rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] border border-white flex flex-col items-center gap-8 max-w-sm w-full text-center animate-in zoom-in-95 duration-300">
+                        {!uploadSuccess ? (
+                            <>
+                                <div className="relative">
+                                    <div className="w-24 h-24 border-[6px] border-[#ff8938]/10 border-t-[#ff8938] rounded-full animate-spin"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-[#ff8938] animate-pulse">
+                                            <i className="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <h3 className="text-3xl font-black text-gray-800 tracking-tight">Listing Shop</h3>
+                                    <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">Processing Assets</p>
+                                </div>
+                                <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden shadow-inner">
+                                    <div className="h-full bg-gradient-to-r from-[#ff8938] to-[#ff0000] w-2/3 rounded-full animate-[loading_2s_ease-in-out_infinite]"></div>
+                                </div>
+                                <p className="text-[10px] text-gray-400 font-medium px-6">We're optimizing your photos and securing your business profile.</p>
+                            </>
+                        ) : (
+                            <>
+                                <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-600 animate-in zoom-in duration-500">
+                                    <i className="fa-solid fa-check text-4xl"></i>
+                                </div>
+                                <div className="space-y-3">
+                                    <h3 className="text-4xl font-black text-gray-800 tracking-tight">Success!</h3>
+                                    <p className="text-sm text-green-600 font-bold uppercase tracking-widest">Shop Listed Successfully</p>
+                                </div>
+                                <p className="text-sm text-gray-500 font-medium px-6">Your shop is now in the review queue. Redirecting you to your dashboard...</p>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

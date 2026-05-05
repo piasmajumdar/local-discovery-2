@@ -1380,3 +1380,13 @@ header {
         max-width: 100vw;
     }
 }
+
+@keyframes loading {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0); }
+    100% { transform: translateX(100%); }
+}
+
+.animate-progress-bar {
+    animation: loading 2s ease-in-out infinite;
+}
