@@ -242,7 +242,8 @@ export default function ListYourShop() {
             setIsUploading(true);
             setNotification({ type: 'success', message: "Uploading shop data and photos..." });
             
-            const response = await fetch('http://localhost:5000/api/shops/add', {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const response = await fetch(`${API_URL}/api/shops/add`, {
                 method: 'POST',
                 body: data,
             });
