@@ -30,7 +30,7 @@ export default function Header() {
             <nav className="w-11/12 sm:w-10/12 mx-auto flex justify-between items-center pb-5">
                 <div>
                     <Link href="/">
-                        <h4 className="text-xl sm:text-3xl flex flex-col sm:flex-row font-bold">
+                        <h4 className="text-2xl sm:text-3xl flex flex-col sm:flex-row font-bold">
                             <span className="text-[red]">Local </span>
                             <span>Discovery</span></h4>
                     </Link>
@@ -38,7 +38,7 @@ export default function Header() {
                 <div>
                     <ul className="flex items-center gap-6">
                         <li className="hover:text-[#ff8938] transition-colors cursor-pointer text-[18px] hidden md:block">
-                            <Link href="/list-your-shop"><i className="fa-solid fa-shop mr-2"></i>List your shop</Link>
+                            <Link href="/list-your-shop"><i className="fa-solid fa-shop mr-2"></i>List a shop</Link>
                         </li>
 
                         {user ? (

@@ -30,13 +30,13 @@ export default async function HomePage() {
                     categories.map((cat) => (
                         <div key={cat._id || cat.id} className="p-2 border border-[#cbc2c283] rounded-lg bg-gray-50/30">
                             <h2 className="font-bold text-lg py-4 px-2">{cat.section}</h2>
-                            <div className="flex flex-wrap gap-6 justify-start p-2">
+                            <div className="flex flex-wrap gap-4 justify-center p-2">
                                 {cat.items.map((item) => (
                                     <CategoryCard
                                         key={item.id}
                                         name={item.name}
                                         image={item.image}
-                                        // CategoryCard needs to be able to handle its own navigation or we wrap it
+                                    // CategoryCard needs to be able to handle its own navigation or we wrap it
                                     />
                                 ))}
                             </div>

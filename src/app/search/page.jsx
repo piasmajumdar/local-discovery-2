@@ -1,26 +1,24 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo, memo, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getNearbyShops } from '@/lib/api';
 import { ShopCardSkeleton } from '@/components/Skeleton';
 // import { SHOPS } from '@/data/shops'; // Removed for MongoDB migration
 
 // Helper functions from search.js
-const BASE_LAT = 16.492241, BASE_LNG = 80.500429;
-
 function calcRating(reviews) {
   if (!reviews || reviews.length === 0) return 0;
   const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
   return +(sum / reviews.length).toFixed(1);
 }
 
-function calcDist(lat, lng) {
+function calcDist(lat, lng, baseLat, baseLng) {
   const p = 0.017453292519943295;
   const c = Math.cos;
-  const a = 0.5 - c((lat - BASE_LAT) * p) / 2 +
-    c(BASE_LAT * p) * c(lat * p) *
-    (1 - c((lng - BASE_LNG) * p)) / 2;
+  const a = 0.5 - c((lat - baseLat) * p) / 2 +
+    c(baseLat * p) * c(lat * p) *
+    (1 - c((lng - baseLng) * p)) / 2;
   return +(12742 * Math.asin(Math.sqrt(a))).toFixed(1);
 }
 
@@ -140,9 +138,16 @@ const ShopCard = memo(({ shop, isActive, onClick }) => {
   );
 });
 
-ShopCard.displayName = 'ShopCard';
+import MapComponent from '@/components/MapComponent';
 
 function SearchContent() {
+  const searchParams = useSearchParams();
+  const urlLat = searchParams.get('lat');
+  const urlLng = searchParams.get('lng');
+
+  const BASE_LAT = urlLat ? parseFloat(urlLat) : 16.492241;
+  const BASE_LNG = urlLng ? parseFloat(urlLng) : 80.500429;
+
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtered, setFiltered] = useState([]);
@@ -162,24 +167,75 @@ function SearchContent() {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [reviewPhotos, setReviewPhotos] = useState([]);
-  const searchParams = useSearchParams();
+
+  // Location/Map State
+  const [isGPS, setIsGPS] = useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+
   const mapRef = useRef(null);
   const dMapRef = useRef(null);
-  const markersRef = useRef({});
+  const router = useRouter();
+
+  const handleLocationUpdate = (lat, lng, name) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('lat', lat);
+    params.set('lng', lng);
+    if (name) {
+      params.set('city', name);
+      setCityName(name);
+      localStorage.setItem('selectedCity', name);
+    }
+    localStorage.setItem('userLat', lat);
+    localStorage.setItem('userLng', lng);
+    setIsGPS(false);
+    router.push(`/search?${params.toString()}`);
+  };
+
+  const handleMyLocation = () => {
+    if ("geolocation" in navigator) {
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+          const data = await res.json();
+          const name = data.address.city || data.address.town || data.address.village || data.address.suburb || "Current Location";
+          setIsGPS(true);
+          handleLocationUpdate(latitude, longitude, name);
+          setIsGPS(true);
+        } catch (e) {
+          setIsGPS(true);
+          handleLocationUpdate(latitude, longitude, "My Location");
+          setIsGPS(true);
+        } finally {
+          setIsLocating(false);
+        }
+      }, (err) => {
+        console.error(err);
+        setIsLocating(false);
+      }, { timeout: 10000 });
+    }
+  };
 
   useEffect(() => {
     const q = searchParams.get('q');
     if (q) setSearchQuery(q);
-    const savedCity = localStorage.getItem('selectedCity');
-    if (savedCity) setCityName(savedCity);
+    const cityParam = searchParams.get('city');
+    if (cityParam) setCityName(cityParam);
+    else {
+      const savedCity = localStorage.getItem('selectedCity');
+      if (savedCity) setCityName(savedCity);
+    }
   }, [searchParams]);
 
   useEffect(() => {
     async function fetchShops() {
+      setLoading(true);
       try {
         const data = await getNearbyShops(BASE_LAT, BASE_LNG);
         const s = data.map(shop => {
-          const distance = calcDist(shop.lat, shop.lng);
+          const distance = calcDist(shop.lat, shop.lng, BASE_LAT, BASE_LNG);
           const rating = calcRating(shop.reviews);
           const isOpen = isShopOpen(shop.hours);
           return { ...shop, distance, rating, isOpen };
@@ -192,22 +248,7 @@ function SearchContent() {
       }
     }
     fetchShops();
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.L && !mapRef.current) {
-      mapRef.current = window.L.map('map', { zoomControl: false, attributionControl: false }).setView([BASE_LAT, BASE_LNG], 14);
-      window.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(mapRef.current);
-
-      const ic = window.L.divIcon({
-        className: '',
-        html: `<div style="width:16px;height:16px;background:#2563eb;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 4px rgba(37,99,235,.25);"></div>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
-      });
-      window.L.marker([BASE_LAT, BASE_LNG], { icon: ic }).addTo(mapRef.current).bindPopup('<div class="popup-name">📍 You are here</div>');
-    }
-  }, []);
+  }, [BASE_LAT, BASE_LNG]);
 
   useEffect(() => {
     applyFilters();
@@ -638,13 +679,26 @@ function SearchContent() {
     <div className="fixed-layout">
       <header>
         <nav className="header-nav">
-          <Link href="/" className="logo-text"><span>Local</span> Discovery</Link>
-          <div className="hdr-search">
-            <input type="search" placeholder="Search for shops, services, or essentials..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-            <button className="hdr-search-btn"><i className="fa-solid fa-magnifying-glass-location"></i></button>
+          <Link href="/" className="text-2xl sm:text-3xl flex flex-col sm:flex-row font-bold no-underline">
+            <span className="text-[red]">Local </span>
+            <span className="text-white ml-0 sm:ml-1">Discovery</span>
+          </Link>
+
+          {/* Desktop Search Bar */}
+          <div className="hidden md:flex">
+            <div className="hdr-search">
+              <input
+                type="search"
+                placeholder="Search for shops, services, or essentials..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button className="hdr-search-btn"><i className="fa-solid fa-magnifying-glass-location"></i></button>
+            </div>
           </div>
+
           <div className="hdr-right" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <Link href="/list-your-shop" className="btn-list"><i className="fa-solid fa-shop"></i> List your shop</Link>
+            <Link href="/list-your-shop" className="btn-list flex"><i className="fa-solid fa-shop"></i> List a shop</Link>
 
             {user ? (
               <div className="relative" style={{ position: 'relative' }}>
@@ -684,6 +738,26 @@ function SearchContent() {
         </nav>
       </header>
 
+      <div className="bg-white border-b border-gray-200 px-4 py-3 md:hidden">
+        <div className="max-w-4xl mx-auto">
+          <div className="relative group">
+            <input
+              type="search"
+              placeholder="Search for shops, services, or essentials..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-[#ff8938] focus:bg-white outline-none transition-all shadow-sm group-hover:border-gray-300"
+            />
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i className="fa-solid fa-magnifying-glass-location text-gray-400 group-focus-within:text-[#ff8938] transition-colors"></i>
+            </div>
+            <button className="absolute right-2 top-2 bg-gradient-to-r from-[#ff8938] to-[#ff0000] text-white h-10 px-6 rounded-xl font-bold shadow-md hover:shadow-lg active:scale-95 transition-all">
+              Search
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="filter-bar">
         <span className="filter-label">Filter:</span>
         <div className={`pill ${activeFilter === 'open' ? 'active' : ''}`} onClick={() => setActiveFilter('open')}>🟢 Open Now</div>
@@ -694,8 +768,8 @@ function SearchContent() {
         {activeFilter && <div className="pill" onClick={() => setActiveFilter('')} style={{ background: 'var(--border)', color: 'var(--text)' }}>✕ Clear</div>}
       </div>
 
-      <div className="main-layout">
-        <div className="left-panel" style={{ width: '530px' }}>
+      <div className="main-layout w-full">
+        <div className="left-panel w-full md:w-[530px] flex-1 md:flex-none grow">
           <div className="panel-header">
             <div className="result-count">
               <span>{filtered.length}</span> shops near {cityName}
@@ -728,13 +802,64 @@ function SearchContent() {
             )}
           </div>
         </div>
-        <div className="right-panel">
-          <div id="map" style={{ height: '100%', width: '100%', borderRadius: '0' }}></div>
-          <div className="map-fab">
-            <div className="map-btn" title="My Location" onClick={() => { if (mapRef.current) mapRef.current.setView([BASE_LAT, BASE_LNG], 15) }}><i className="fa-solid fa-location-crosshairs"></i></div>
-            <div className="map-btn" title="Zoom In" onClick={() => { if (mapRef.current) mapRef.current.zoomIn() }}><i className="fa-solid fa-plus"></i></div>
-            <div className="map-btn" title="Zoom Out" onClick={() => { if (mapRef.current) mapRef.current.zoomOut() }}><i className="fa-solid fa-minus"></i></div>
+        <div className="right-panel hidden md:block">
+          <MapComponent 
+            baseLat={BASE_LAT}
+            baseLng={BASE_LNG}
+            shops={filtered}
+            activeId={activeId}
+            isGPS={isGPS}
+            onShopClick={(id) => { setActiveId(id); setIsDetailOpen(true); }}
+            onLocationUpdate={handleLocationUpdate}
+            handleMyLocation={handleMyLocation}
+            containerId="desktop-map"
+            isVisible={true}
+            isLocating={isLocating}
+          />
+        </div>
+      </div>
+
+      {/* Mobile Map FAB */}
+      <button 
+        onClick={() => setIsMapModalOpen(true)}
+        className="md:hidden fixed bottom-6 right-6 z-[1001] bg-gradient-to-r from-[#ff8938] to-[#ff0000] text-white flex items-center gap-2 px-6 py-3.5 rounded-full font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all"
+      >
+        <i className="fa-solid fa-map-location-dot"></i>
+        <span>View Map</span>
+      </button>
+
+      {/* Persistent Mobile Map Modal (Slide-up) */}
+      <div 
+        className={`md:hidden fixed inset-0 z-[2000] bg-white flex flex-col transition-transform duration-500 ease-out ${isMapModalOpen ? 'translate-y-0' : 'translate-y-full'}`}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-white shadow-sm shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-[#ff8938]">
+              <i className="fa-solid fa-map"></i>
+            </div>
+            <span className="font-bold text-gray-800">Explore Area</span>
           </div>
+          <button 
+            onClick={() => setIsMapModalOpen(false)}
+            className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+          >
+            <i className="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div className="flex-1 relative">
+          <MapComponent 
+            baseLat={BASE_LAT}
+            baseLng={BASE_LNG}
+            shops={filtered}
+            activeId={activeId}
+            isGPS={isGPS}
+            onShopClick={(id) => { setActiveId(id); setIsDetailOpen(true); setIsMapModalOpen(false); }}
+            onLocationUpdate={handleLocationUpdate}
+            handleMyLocation={handleMyLocation}
+            containerId="mobile-modal-map"
+            isVisible={isMapModalOpen}
+            isLocating={isLocating}
+          />
         </div>
       </div>
 

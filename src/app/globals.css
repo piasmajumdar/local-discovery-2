@@ -234,13 +234,13 @@ header {
 .main-layout {
     display: flex;
     flex: 1;
+    width: 100%;
     overflow: hidden;
 }
 
 /* â”€â”€ LEFT PANEL â”€â”€ */
 .left-panel {
-    width: 530px;
-    min-width: 340px;
+    min-width: 0;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
