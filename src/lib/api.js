@@ -149,3 +149,14 @@ export async function deleteUser(token, userId) {
     if (!response.ok) throw new Error(data.error || 'User deletion failed');
     return data;
 }
+
+export async function postReview(token, shopId, reviewData) {
+    const response = await fetch(`${API_BASE_URL}/api/shops/${shopId}/review`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: reviewData,
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Review submission failed');
+    return data;
+}

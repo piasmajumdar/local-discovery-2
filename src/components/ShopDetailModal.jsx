@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
+import { postReview } from '@/lib/api';
 
 function calcRating(reviews) {
   if (!reviews || reviews.length === 0) return 0;
@@ -48,6 +49,10 @@ export default function ShopDetailModal({ isOpen, shop, onClose, onUpdateShop })
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [reviewPhotos, setReviewPhotos] = useState([]);
+  const [reviewFiles, setReviewFiles] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reviewStatus, setReviewStatus] = useState(null); // null, 'submitting', 'success', 'error'
+  const [user, setUser] = useState(null);
 
   const dMapRef = useRef(null);
 
@@ -55,9 +60,12 @@ export default function ShopDetailModal({ isOpen, shop, onClose, onUpdateShop })
     if (isOpen && shop) {
       setDetailTab('overview');
       setProductQuery('');
-      setReviewRating(0);
-      setReviewText('');
       setReviewPhotos([]);
+      setReviewFiles([]);
+      setIsSubmitting(false);
+
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) setUser(JSON.parse(storedUser));
       
       if (typeof window !== 'undefined' && window.L) {
         setTimeout(() => {
@@ -88,32 +96,81 @@ export default function ShopDetailModal({ isOpen, shop, onClose, onUpdateShop })
 
   if (!shop) return null;
 
-  const submitReview = () => {
-    if (!reviewRating) { alert("Please select a rating."); return; }
-    if (!reviewText.trim()) { alert("Please write a review."); return; }
+  const submitReview = async () => {
+    if (!user) { alert("Please login to submit a review."); return; }
+    if (!reviewRating) { setReviewStatus('error'); return; }
+    if (!reviewText.trim()) { setReviewStatus('error'); return; }
 
-    const newRev = {
-      id: Date.now(),
-      name: "You",
-      init: "Y",
-      date: "Just now",
-      rating: reviewRating,
-      text: reviewText,
-      photos: reviewPhotos
-    };
+    setIsSubmitting(true);
+    setReviewStatus('submitting');
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('rating', reviewRating);
+      formData.append('text', reviewText);
+      
+      reviewFiles.forEach(file => {
+        formData.append('photos', file);
+      });
 
-    if (onUpdateShop) {
-      onUpdateShop(shop.id, newRev);
+      const result = await postReview(token, shop.id, formData);
+
+      if (result.success) {
+        if (onUpdateShop) {
+          onUpdateShop(shop.id, result.review);
+        }
+        setReviewRating(0);
+        setReviewText('');
+        setReviewPhotos([]);
+        setReviewFiles([]);
+        setReviewStatus('success');
+      }
+    } catch (err) {
+      console.error("Failed to submit review:", err);
+      setReviewStatus('error');
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    setReviewRating(0);
-    setReviewText('');
-    setReviewPhotos([]);
-    alert("Review submitted successfully!");
+  const handlePhotosOnlyUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!user) { window.location.href = '/login'; return; }
+    if (files.length === 0) return;
+
+    setReviewStatus('submitting');
+    setIsSubmitting(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('rating', 5); // Default rating for gallery contributions
+      formData.append('text', "Added photos to the gallery"); 
+      
+      files.forEach(file => {
+        formData.append('photos', file);
+      });
+
+      const result = await postReview(token, shop.id, formData);
+
+      if (result.success) {
+        if (onUpdateShop) {
+          onUpdateShop(shop.id, result.review);
+        }
+        setReviewStatus('success');
+      }
+    } catch (err) {
+      console.error("Gallery upload error:", err);
+      setReviewStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleRevPhoto = (e) => {
     const files = Array.from(e.target.files);
+    setReviewFiles(prev => [...prev, ...files]);
+    
     files.forEach(file => {
       const reader = new FileReader();
       reader.onload = (ev) => {
@@ -234,7 +291,51 @@ export default function ShopDetailModal({ isOpen, shop, onClose, onUpdateShop })
   const renderPhotos = () => {
     const imgs = shop.images || [];
     return (
-      <>
+      <div style={{ position: 'relative', minHeight: '300px' }}>
+        {reviewStatus && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-white/95 backdrop-blur-sm animate-in fade-in duration-300 rounded-2xl">
+                <div className="text-center space-y-4">
+                    {reviewStatus === 'submitting' && (
+                        <div className="animate-in zoom-in-95 duration-300">
+                            <div className="w-12 h-12 border-4 border-[#ff8938] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                            <p className="text-gray-800 font-bold text-sm">Uploading to Gallery...</p>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Optimizing Quality</p>
+                        </div>
+                    )}
+                    {reviewStatus === 'success' && (
+                        <div className="animate-in zoom-in-95 duration-500">
+                            <div className="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                                <i className="fa-solid fa-check"></i>
+                            </div>
+                            <h3 className="text-lg font-black text-gray-800">Photos Added!</h3>
+                            <p className="text-xs text-gray-500 mb-4">Your contributions are now live.</p>
+                            <button 
+                                onClick={() => setReviewStatus(null)}
+                                className="px-6 py-2 bg-gray-900 text-white rounded-full font-bold text-xs hover:scale-105 transition-all shadow-lg"
+                            >
+                                Awesome!
+                            </button>
+                        </div>
+                    )}
+                    {reviewStatus === 'error' && (
+                        <div className="animate-in zoom-in-95 duration-300">
+                            <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                                <i className="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                            <h3 className="text-lg font-black text-gray-800">Upload Failed</h3>
+                            <p className="text-xs text-gray-500 mb-4">Please try again.</p>
+                            <button 
+                                onClick={() => setReviewStatus(null)}
+                                className="px-6 py-2 bg-red-600 text-white rounded-full font-bold text-xs shadow-lg"
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        )}
+
         <div style={{ fontFamily: "'Manrope',sans-serif", fontSize: '17px', fontWeight: 800, marginBottom: '14px' }}>{shop.name} — {imgs.length} Photo{imgs.length !== 1 ? 's' : ''}</div>
         {!imgs.length ? (
           <div className="gallery-empty"><i className="fa-solid fa-images" style={{ fontSize: '32px', color: 'var(--border2)' }}></i><span style={{ fontSize: '13px', color: 'var(--muted)' }}>No photos yet — be the first!</span></div>
@@ -253,11 +354,26 @@ export default function ShopDetailModal({ isOpen, shop, onClose, onUpdateShop })
         )}
         <hr className="divider" />
         <div className="section-label">Upload Your Photos</div>
-        <label className="photo-upload-btn" style={{ display: 'inline-block', padding: '10px 20px', border: '1.5px dashed var(--border2)', borderRadius: '12px', cursor: 'pointer', fontSize: '13px', color: 'var(--muted)' }}>
-          <i className="fa-solid fa-camera"></i> Choose Photos
-          <input type="file" accept="image/*" multiple style={{ display: 'none' }} />
-        </label>
-      </>
+        
+        {!user ? (
+          <div style={{ textAlign: 'center', padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+             <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '10px' }}>Log in to contribute photos to this shop's gallery.</p>
+             <button 
+              onClick={() => window.location.href='/login'}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors"
+             >
+               Login to Upload
+             </button>
+          </div>
+        ) : (
+          <label className="photo-upload-btn" style={{ display: 'inline-block', padding: '12px 24px', border: '2px dashed var(--border2)', borderRadius: '15px', cursor: 'pointer', fontSize: '13px', color: 'var(--muted)', width: '100%', textAlign: 'center', background: 'var(--surface2)', transition: 'all' }}>
+            <i className="fa-solid fa-cloud-arrow-up" style={{ fontSize: '20px', marginBottom: '5px', display: 'block', color: '#ff8938' }}></i>
+            <span style={{ fontWeight: 700 }}>Choose Photos to Contribution</span>
+            <p style={{ fontSize: '10px', marginTop: '4px', opacity: 0.6 }}>Max 5MB each (JPG, PNG, WebP)</p>
+            <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handlePhotosOnlyUpload} />
+          </label>
+        )}
+      </div>
     );
   };
 
@@ -290,42 +406,122 @@ export default function ShopDetailModal({ isOpen, shop, onClose, onUpdateShop })
           </div>
         </div>
 
-        <div className="write-review-box">
-          <div className="section-label">Write a Review</div>
-          <div className="star-picker">
-            {[1, 2, 3, 4, 5].map(n => (
-              <span
-                key={n}
-                className={`star-btn ${reviewRating >= n ? 'active' : ''}`}
-                onClick={() => setReviewRating(n)}
-                style={{ cursor: 'pointer', fontSize: '24px', color: reviewRating >= n ? '#fbbf24' : '#e5e7eb' }}
-              >
-                {reviewRating >= n ? '★' : '☆'}
-              </span>
-            ))}
-          </div>
-          <textarea
-            className="review-textarea"
-            placeholder={`Share your experience at ${shop.name}…`}
-            value={reviewText}
-            onChange={(e) => setReviewText(e.target.value)}
-            rows="3"
-            style={{ width: '100%', border: '1.5px solid var(--border2)', borderRadius: '10px', padding: '10px', fontSize: '13px', marginTop: '10px', outline: 'none', background: 'var(--surface2)', color: 'var(--text)' }}
-          />
-          <div style={{ marginTop: '10px' }}>
-            <label className="photo-upload-btn" style={{ display: 'inline-block', padding: '8px 16px', border: '1.5px dashed var(--border2)', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', color: 'var(--muted)' }}>
-              <i className="fa-solid fa-camera-retro"></i> Add Photos
-              <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleRevPhoto} />
-            </label>
-            <div className="photo-preview-row" style={{ display: 'flex', gap: '8px', marginTop: '8px', overflowX: 'auto' }}>
-              {reviewPhotos.map((p, i) => (
-                <img key={i} src={p} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border2)' }} alt="" />
-              ))}
+        <div className="write-review-box" style={{ position: 'relative', overflow: 'hidden', minHeight: '150px' }}>
+          {reviewStatus && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-white/95 backdrop-blur-sm animate-in fade-in duration-300">
+                <div className="text-center space-y-4">
+                    {reviewStatus === 'submitting' && (
+                        <div className="animate-in zoom-in-95 duration-300">
+                            <div className="w-12 h-12 border-4 border-[#ff8938] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                            <p className="text-gray-800 font-bold text-sm">Uploading Feedback...</p>
+                            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Securing Photos</p>
+                        </div>
+                    )}
+                    {reviewStatus === 'success' && (
+                        <div className="animate-in zoom-in-95 duration-500">
+                            <div className="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                                <i className="fa-solid fa-check"></i>
+                            </div>
+                            <h3 className="text-lg font-black text-gray-800">Review Posted!</h3>
+                            <p className="text-xs text-gray-500 mb-4">Your experience is now live.</p>
+                            <button 
+                                onClick={() => setReviewStatus(null)}
+                                className="px-6 py-2 bg-gray-900 text-white rounded-full font-bold text-xs hover:scale-105 transition-all shadow-lg"
+                            >
+                                Great!
+                            </button>
+                        </div>
+                    )}
+                    {reviewStatus === 'error' && (
+                        <div className="animate-in zoom-in-95 duration-300">
+                            <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                                <i className="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                            <h3 className="text-lg font-black text-gray-800">Submission Error</h3>
+                            <p className="text-xs text-gray-500 mb-4">Please check your internet or rating.</p>
+                            <button 
+                                onClick={() => setReviewStatus(null)}
+                                className="px-6 py-2 bg-red-600 text-white rounded-full font-bold text-xs shadow-lg"
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
-          </div>
-          <button className="submit-review-btn" onClick={submitReview} style={{ marginTop: '10px', width: '100%', padding: '10px', borderRadius: '10px', background: 'var(--grad)', color: '#fff', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-            <i className="fa-solid fa-paper-plane"></i> Submit Review
-          </button>
+          )}
+
+          {!user ? (
+            <div style={{ textAlign: 'center', padding: '20px', background: '#fff7ed', borderRadius: '12px', border: '1px solid #ffedd5' }}>
+               <i className="fa-solid fa-lock text-orange-400 mb-2" style={{ fontSize: '20px' }}></i>
+               <p style={{ fontSize: '13px', fontWeight: 700, color: '#9a3412' }}>Login Required</p>
+               <p style={{ fontSize: '12px', color: '#c2410c', marginBottom: '10px' }}>Please log in to share your experience and photos.</p>
+               <button 
+                onClick={() => window.location.href='/login'}
+                style={{ padding: '6px 16px', background: '#ea580c', color: '#fff', borderRadius: '8px', border: 'none', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+               >
+                 Login Now
+               </button>
+            </div>
+          ) : (
+            <>
+              <div className="section-label">Write a Review</div>
+              <div className="star-picker">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <span
+                    key={n}
+                    className={`star-btn ${reviewRating >= n ? 'active' : ''}`}
+                    onClick={() => setReviewRating(n)}
+                    style={{ cursor: 'pointer', fontSize: '24px', color: reviewRating >= n ? '#fbbf24' : '#e5e7eb' }}
+                  >
+                    {reviewRating >= n ? '★' : '☆'}
+                  </span>
+                ))}
+              </div>
+              <textarea
+                className="review-textarea"
+                placeholder={`Share your experience at ${shop.name}…`}
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                rows="3"
+                style={{ width: '100%', border: '1.5px solid var(--border2)', borderRadius: '10px', padding: '10px', fontSize: '13px', marginTop: '10px', outline: 'none', background: 'var(--surface2)', color: 'var(--text)' }}
+              />
+              <div style={{ marginTop: '10px' }}>
+                <label className="photo-upload-btn" style={{ display: 'inline-block', padding: '8px 16px', border: '1.5px dashed var(--border2)', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', color: 'var(--muted)' }}>
+                  <i className="fa-solid fa-camera-retro"></i> Add Photos
+                  <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleRevPhoto} />
+                </label>
+                <div className="photo-preview-row" style={{ display: 'flex', gap: '8px', marginTop: '8px', overflowX: 'auto' }}>
+                  {reviewPhotos.map((p, i) => (
+                    <div key={i} style={{ position: 'relative' }}>
+                      <img src={p} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border2)' }} alt="" />
+                      <button 
+                        onClick={() => {
+                          setReviewPhotos(prev => prev.filter((_, idx) => idx !== i));
+                          setReviewFiles(prev => prev.filter((_, idx) => idx !== i));
+                        }}
+                        style={{ position: 'absolute', top: '-5px', right: '-5px', width: '16px', height: '16px', background: 'red', color: 'white', borderRadius: '50%', fontSize: '10px', border: 'none', cursor: 'pointer' }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button 
+                className="submit-review-btn" 
+                onClick={submitReview} 
+                disabled={isSubmitting}
+                style={{ marginTop: '10px', width: '100%', padding: '10px', borderRadius: '10px', background: isSubmitting ? '#ccc' : 'var(--grad)', color: '#fff', fontWeight: 700, border: 'none', cursor: 'pointer' }}
+              >
+                {isSubmitting ? (
+                  <><i className="fa-solid fa-circle-notch fa-spin"></i> Posting...</>
+                ) : (
+                  <><i className="fa-solid fa-paper-plane"></i> Submit Review</>
+                )}
+              </button>
+            </>
+          )}
         </div>
 
         <div className="section-label" style={{ marginBottom: '12px' }}>{shop.reviews ? shop.reviews.length : 0} Customer Reviews</div>
