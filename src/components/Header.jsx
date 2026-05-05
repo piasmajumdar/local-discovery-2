@@ -67,6 +67,11 @@ export default function Header() {
                                             <p className="text-xs text-gray-500">Signed in as</p>
                                             <p className="text-sm font-bold truncate">{user.email}</p>
                                         </div>
+                                        {user.role === 'admin' && (
+                                            <Link href="/admin" className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 text-orange-600 font-bold transition-colors border-b border-gray-50">
+                                                <i className="fa-solid fa-user-shield"></i> Admin Panel
+                                            </Link>
+                                        )}
                                         <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors">
                                             <i className="fa-solid fa-gauge-high text-gray-400"></i> Dashboard
                                         </Link>

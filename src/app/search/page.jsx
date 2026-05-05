@@ -377,6 +377,11 @@ function SearchContent() {
                       <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Signed in as</div>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.fullName}</div>
                     </div>
+                    {user.role === 'admin' && (
+                      <Link href="/admin" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', color: '#ff8938', fontSize: '13px', textDecoration: 'none', fontWeight: 700, borderBottom: '1px solid var(--border2)' }} className="hover:bg-orange-50">
+                        <i className="fa-solid fa-user-shield"></i> Admin Panel
+                      </Link>
+                    )}
                     <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', color: 'var(--text)', fontSize: '13px', textDecoration: 'none' }} className="hover:bg-gray-100">
                       <i className="fa-solid fa-gauge-high" style={{ color: 'var(--muted)' }}></i> Dashboard
                     </Link>
