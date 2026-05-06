@@ -27,9 +27,9 @@ export default function RootLayout({ children }) {
       <body className="open-sans">
         <Header />
         {children}
-        <Footer />
         <Analytics />
         <SpeedInsights />
+        <Footer />
       </body>
     </html>
   )
